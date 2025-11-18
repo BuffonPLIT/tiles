@@ -21,15 +21,16 @@ export default function Sidebar({
       <section>
         <h3>Параметры плитки</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {/* уже существующие поля */}
           <label>
             Ширина плитки (мм):{" "}
             <input
               type="number"
-              value={tileSettings.tileWidthMm}
+              value={tileSettings.tileWidthMm ?? ""}
               onChange={(e) =>
                 onTileSettingsChange({
                   ...tileSettings,
-                  tileWidthMm: Number(e.target.value) || 0,
+                  tileWidthMm: e.target.value === "" ? 0 : Number(e.target.value),
                 })
               }
             />
@@ -38,11 +39,11 @@ export default function Sidebar({
             Длина плитки (мм):{" "}
             <input
               type="number"
-              value={tileSettings.tileLengthMm}
+              value={tileSettings.tileLengthMm ?? ""}
               onChange={(e) =>
                 onTileSettingsChange({
                   ...tileSettings,
-                  tileLengthMm: Number(e.target.value) || 0,
+                  tileLengthMm: e.target.value === "" ? 0 : Number(e.target.value),
                 })
               }
             />
@@ -51,11 +52,26 @@ export default function Sidebar({
             Толщина шва (мм):{" "}
             <input
               type="number"
-              value={tileSettings.groutMm}
+              value={tileSettings.groutMm ?? ""}
               onChange={(e) =>
                 onTileSettingsChange({
                   ...tileSettings,
-                  groutMm: Number(e.target.value) || 0,
+                  groutMm: e.target.value === "" ? 0 : Number(e.target.value),
+                })
+              }
+            />
+          </label>
+
+          {/* NEW: сдвиг ряда */}
+          <label>
+            Сдвиг ряда (мм):{" "}
+            <input
+              type="number"
+              value={tileSettings.rowOffsetMm ?? ""}
+              onChange={(e) =>
+                onTileSettingsChange({
+                  ...tileSettings,
+                  rowOffsetMm: e.target.value === "" ? 0 : Number(e.target.value),
                 })
               }
             />

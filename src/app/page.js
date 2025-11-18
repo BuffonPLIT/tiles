@@ -19,16 +19,17 @@ export default function Page() {
 
   // Tile settings
   const [tileSettings, setTileSettings] = useState({
-    tileWidthMm: 600,
-    tileLengthMm: 1200,
+    tileWidthMm: 596,
+    tileLengthMm: 146,
     groutMm: 2,
-    rotationDeg: 0, // rotation of pattern over plan
-    pattern: "grid", // "grid" | "herringbone"
+    rotationDeg: 0,
+    pattern: "grid",
 
-    // NEW: colors
-    tileFillColor: "#f5f5f5", // цвет заливки плитки
-    tileBorderColor: "#ffff00", // цвет границы плитки (ранее жёлтый)
-    groutColor: "#ff0000", // цвет шва (ранее красный)
+    tileFillColor: "#f5f5f5",
+    tileBorderColor: "#ffff00",
+    groutColor: "#ff0000",
+
+    rowOffsetMm: 0, // NEW: сдвиг следующего ряда относительно предыдущего (мм)
   });
 
   // Calibration settings

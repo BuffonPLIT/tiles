@@ -1,86 +1,102 @@
 import React from "react";
 
-export function renderGrid({ imageSize, pxPerMm, tileWidthMm, tileLengthMm, groutPx, tileFillColor, tileBorderColor, groutColor }) {
+export function renderGrid({
+  imageSize,
+  pxPerMm,
+  tileWidthMm,
+  tileLengthMm,
+  groutPx,
+  tileFillColor,
+  tileBorderColor,
+  groutColor,
+  rowOffsetMm,
+}) {
   if (!imageSize || !pxPerMm) return null;
 
-  // short = меньшая сторона, long = большая
-  const shortPx = Math.min(tileWidthMm, tileLengthMm) * pxPerMm;
-  const longPx = Math.max(tileWidthMm, tileLengthMm) * pxPerMm;
+  // ВАЖНО: используем размеры как есть, НЕ min/max
+  const widthPx = tileWidthMm * pxPerMm; // ширина плитки по X
+  const heightPx = tileLengthMm * pxPerMm; // длина плитки по Y
 
-  if (shortPx <= 0 || longPx <= 0 || groutPx < 0) return null;
+  if (widthPx <= 0 || heightPx <= 0 || groutPx < 0) return null;
 
   // Шов = расстояние между плитками
-  const stepX = shortPx + groutPx;
-  const stepY = longPx + groutPx;
+  const stepX = widthPx + groutPx;
+  const stepY = heightPx + groutPx;
 
-  const cols = Math.ceil(imageSize.width / stepX) + 2;
-  const rows = Math.ceil(imageSize.height / stepY) + 2;
+  // Сдвиг ряда в пикселях
+  const rowOffsetPx = (rowOffsetMm || 0) * pxPerMm;
+
+  const cols = Math.ceil(imageSize.width / stepX) + 4;
+  const rows = Math.ceil(imageSize.height / stepY) + 4;
 
   const tileStroke = 1; // визуальная толщина границы плитки
-  const margin = Math.max(imageSize.width, imageSize.height);
-
   const elements = [];
 
-  // 1) Плитки: заливка + граница
-  for (let row = -1; row < rows; row++) {
-    for (let col = -1; col < cols; col++) {
-      const x = col * stepX;
-      const y = row * stepY;
+  const groutStrokeColor = groutColor ?? "red";
+  const tileStrokeColor = tileBorderColor ?? "yellow";
+  const fillColor = tileFillColor ?? "none";
 
+  for (let row = -2; row < rows; row++) {
+    // сдвиг этого ряда по X
+    const shiftX = row * rowOffsetPx;
+
+    for (let col = -2; col < cols; col++) {
+      const baseX = col * stepX + shiftX;
+      const baseY = row * stepY;
+
+      // ---- Плитка ----
       elements.push(
         <rect
           key={`tile-${row}-${col}`}
-          x={x}
-          y={y}
-          width={shortPx}
-          height={longPx}
-          fill={tileFillColor ?? "none"} // цвет плитки
-          stroke={tileBorderColor ?? "yellow"} // граница плитки
-          strokeWidth={tileStroke} // не шов, просто обводка
+          x={baseX}
+          y={baseY}
+          width={widthPx}
+          height={heightPx}
+          fill={fillColor}
+          stroke={tileStrokeColor}
+          strokeWidth={tileStroke} // это не шов, просто контур
           opacity={0.9}
         />
       );
+
+      // ---- Швы (красные сегменты по правому и нижнему краю плитки) ----
+
+      // вертикальный шов справа
+      const vX = baseX + widthPx + groutPx / 2;
+      const vY1 = baseY;
+      const vY2 = baseY + heightPx;
+
+      elements.push(
+        <line
+          key={`joint-v-${row}-${col}`}
+          x1={vX}
+          y1={vY1}
+          x2={vX}
+          y2={vY2}
+          stroke={groutStrokeColor}
+          strokeWidth={groutPx}
+          opacity={0.7}
+        />
+      );
+
+      // горизонтальный шов снизу
+      const hY = baseY + heightPx + groutPx / 2;
+      const hX1 = baseX;
+      const hX2 = baseX + widthPx;
+
+      elements.push(
+        <line
+          key={`joint-h-${row}-${col}`}
+          x1={hX1}
+          y1={hY}
+          x2={hX2}
+          y2={hY}
+          stroke={groutStrokeColor}
+          strokeWidth={groutPx}
+          opacity={0.7}
+        />
+      );
     }
-  }
-
-  // 2) Швы: красные (или заданные) линии по центру зазоров
-
-  // Вертикальные швы между колонками
-  for (let col = -1; col <= cols; col++) {
-    const tileX = col * stepX;
-    const jointX = tileX + shortPx + groutPx / 2; // центр шва по X
-
-    elements.push(
-      <line
-        key={`v-joint-${col}`}
-        x1={jointX}
-        y1={-margin}
-        x2={jointX}
-        y2={imageSize.height + margin}
-        stroke={groutColor ?? "red"} // цвет шва
-        strokeWidth={groutPx} // толщина шва
-        opacity={0.7}
-      />
-    );
-  }
-
-  // Горизонтальные швы между рядами
-  for (let row = -1; row <= rows; row++) {
-    const tileY = row * stepY;
-    const jointY = tileY + longPx + groutPx / 2; // центр шва по Y
-
-    elements.push(
-      <line
-        key={`h-joint-${row}`}
-        x1={-margin}
-        y1={jointY}
-        x2={imageSize.width + margin}
-        y2={jointY}
-        stroke={groutColor ?? "red"}
-        strokeWidth={groutPx}
-        opacity={0.7}
-      />
-    );
   }
 
   return elements;
