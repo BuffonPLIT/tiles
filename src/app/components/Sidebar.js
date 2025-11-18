@@ -9,20 +9,28 @@ function Sidebar({
   onChangeKnownDistance,
   onStartCalibration,
   pxPerMm,
+  stats, // currently unused, but passed from parent
 }) {
-  // ⭐ Локальное состояние вместо прямых вызовов onTileSettingsChange
+  // Local copy of tile settings for debounced updates
   const [localSettings, setLocalSettings] = useState(tileSettings);
 
-  // 🔥 Debounce: применяем изменения только спустя 700 мс тишины
+  // Sync local state when parent tileSettings change (e.g. after localStorage load)
+  useEffect(() => {
+    setLocalSettings(tileSettings);
+  }, [tileSettings]);
+
+  // Debounce: apply changes to parent after 700ms of inactivity
   useEffect(() => {
     const timer = setTimeout(() => {
+      // avoid redundant update when local state just mirrors props
+      if (localSettings === tileSettings) return;
       onTileSettingsChange(localSettings);
     }, 700);
 
     return () => clearTimeout(timer);
-  }, [localSettings, onTileSettingsChange]);
+  }, [localSettings, tileSettings, onTileSettingsChange]);
 
-  // обновление полей
+  // Update helper
   const update = (field, value) => {
     setLocalSettings((prev) => ({
       ...prev,

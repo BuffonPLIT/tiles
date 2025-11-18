@@ -30,11 +30,11 @@ export default function Page() {
     groutColor: "#ffffff",
     tileOpacity: 0.5,
 
-    rowOffsetMm: 0, // NEW: сдвиг следующего ряда относительно предыдущего (мм)
+    rowOffsetMm: 0, // row shift (mm)
 
-    // NEW: смещение сетки относительно плана (мм)
-    patternOffsetMmX: 0, // вправо/влево
-    patternOffsetMmY: 0, // вниз/вверх (ось Y SVG)
+    // pattern offset (mm)
+    patternOffsetMmX: 0,
+    patternOffsetMmY: 0,
   });
 
   // Calibration settings
@@ -44,49 +44,57 @@ export default function Page() {
     isCalibrating: false,
   });
 
+  // Flag to avoid saving before initial load
+  const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
+
   // --- Load settings from localStorage ---
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
+    if (raw) {
+      try {
+        const data = JSON.parse(raw);
 
-    try {
-      const data = JSON.parse(raw);
-
-      if (data.tileSettings) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setTileSettings((prev) => ({
-          ...prev,
-          ...data.tileSettings,
-        }));
+        if (data.tileSettings) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setTileSettings((prev) => ({
+            ...prev,
+            ...data.tileSettings,
+          }));
+        }
+        if (typeof data.zoom === "number") {
+          setZoom(data.zoom);
+        }
+        if (typeof data.knownDistanceMm === "number") {
+          setCalibration((prev) => ({
+            ...prev,
+            knownDistanceMm: data.knownDistanceMm,
+          }));
+        }
+      } catch (e) {
+        console.warn("Failed to parse saved settings", e);
       }
-      if (typeof data.zoom === "number") {
-        setZoom(data.zoom);
-      }
-      if (typeof data.knownDistanceMm === "number") {
-        setCalibration((prev) => ({
-          ...prev,
-          knownDistanceMm: data.knownDistanceMm,
-        }));
-      }
-    } catch (e) {
-      console.warn("Failed to parse saved settings", e);
     }
+
+    // mark that initial load is done (even if nothing was loaded)
+    setHasLoadedFromStorage(true);
   }, []);
 
   // --- Save settings to localStorage ---
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!hasLoadedFromStorage) return; // do not save before initial load
 
     const payload = {
       tileSettings,
       zoom,
       knownDistanceMm: calibration.knownDistanceMm,
     };
+
     console.log(payload);
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  }, [tileSettings, zoom, calibration.knownDistanceMm]);
+  }, [hasLoadedFromStorage, tileSettings, zoom, calibration.knownDistanceMm]);
 
   // --- Start calibration ---
   const handleStartCalibration = () => {
