@@ -1,66 +1,180 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
 
-export default function Home() {
+import React, { useEffect, useMemo, useState } from "react";
+
+import Sidebar from "./components/Sidebar";
+import PlanCanvas from "./components/PlanCanvas";
+
+const STORAGE_KEY = "tileToolSettings_v1";
+
+export default function Page() {
+  // Image & scale
+  const [imageSrc, setImageSrc] = useState(null);
+  const [imageSize, setImageSize] = useState(null); // { width, height }
+  const [pxPerMm, setPxPerMm] = useState(null);
+
+  // View
+  const [zoom, setZoom] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+  // Tile settings
+  const [tileSettings, setTileSettings] = useState({
+    tileWidthMm: 200,
+    tileLengthMm: 600,
+    groutMm: 2,
+    rotationDeg: 0, // rotation of pattern over plan
+    pattern: "grid", // "grid" | "herringbone"
+  });
+
+  // Calibration settings
+  const [calibration, setCalibration] = useState({
+    knownDistanceMm: 1000,
+    points: [], // [{x, y}, ...] in image coords
+    isCalibrating: false,
+  });
+
+  // --- Load settings from localStorage ---
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+
+    try {
+      const data = JSON.parse(raw);
+
+      if (data.tileSettings) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setTileSettings((prev) => ({
+          ...prev,
+          ...data.tileSettings,
+        }));
+      }
+      if (typeof data.zoom === "number") {
+        setZoom(data.zoom);
+      }
+      if (typeof data.knownDistanceMm === "number") {
+        setCalibration((prev) => ({
+          ...prev,
+          knownDistanceMm: data.knownDistanceMm,
+        }));
+      }
+    } catch (e) {
+      console.warn("Failed to parse saved settings", e);
+    }
+  }, []);
+
+  // --- Save settings to localStorage ---
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const payload = {
+      tileSettings,
+      zoom,
+      knownDistanceMm: calibration.knownDistanceMm,
+    };
+
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }, [tileSettings, zoom, calibration.knownDistanceMm]);
+
+  // --- Start calibration ---
+  const handleStartCalibration = () => {
+    if (!imageSrc) return;
+    setCalibration((prev) => ({
+      ...prev,
+      points: [],
+      isCalibrating: true,
+    }));
+  };
+
+  // --- Tile usage stats (approximate) ---
+  const stats = useMemo(() => {
+    const { tileWidthMm, tileLengthMm } = tileSettings;
+
+    if (!imageSize || !pxPerMm || tileWidthMm <= 0 || tileLengthMm <= 0) {
+      return null;
+    }
+
+    // Plan size in mm
+    const widthMm = imageSize.width / pxPerMm;
+    const heightMm = imageSize.height / pxPerMm;
+    const areaM2 = (widthMm * heightMm) / 1_000_000;
+
+    // Single tile area
+    const tileAreaM2 = (tileWidthMm * tileLengthMm) / 1_000_000;
+
+    const rawCount = areaM2 / tileAreaM2;
+    const fullTiles = Math.ceil(rawCount);
+    const reserveTiles = Math.ceil(fullTiles * 1.1); // +10% reserve
+
+    return {
+      areaM2,
+      tileAreaM2,
+      rawCount,
+      fullTiles,
+      reserveTiles,
+    };
+  }, [imageSize, pxPerMm, tileSettings.tileWidthMm, tileSettings.tileLengthMm]);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        fontFamily: "sans-serif",
+      }}
+    >
+      {/* Left: plan + overlay + export */}
+      <div
+        style={{
+          flex: 2,
+          borderRight: "1px solid #ddd",
+          padding: 16,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+        }}
+      >
+        <PlanCanvas
+          imageSrc={imageSrc}
+          setImageSrc={setImageSrc}
+          imageSize={imageSize}
+          setImageSize={setImageSize}
+          pxPerMm={pxPerMm}
+          setPxPerMm={setPxPerMm}
+          zoom={zoom}
+          setZoom={setZoom}
+          offset={offset}
+          setOffset={setOffset}
+          tileSettings={tileSettings}
+          calibration={calibration}
+          setCalibration={setCalibration}
         />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
+
+      {/* Right: controls + stats */}
+      <div
+        style={{
+          flex: 1,
+          padding: 16,
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}
+      >
+        <Sidebar
+          tileSettings={tileSettings}
+          onTileSettingsChange={setTileSettings}
+          zoom={zoom}
+          onZoomChange={setZoom}
+          calibration={calibration}
+          onChangeKnownDistance={(value) => setCalibration((prev) => ({ ...prev, knownDistanceMm: value }))}
+          onStartCalibration={handleStartCalibration}
+          pxPerMm={pxPerMm}
+          stats={stats}
+        />
+      </div>
     </div>
   );
 }
