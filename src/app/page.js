@@ -1,138 +1,78 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 
 import Sidebar from "./components/Sidebar";
 import PlanCanvas from "./components/PlanCanvas/PlanCanvas";
 
-const STORAGE_KEY = "tileToolSettings_v1";
+import { usePersistentSettings } from "./hooks/usePersistentSettings";
 
 export default function Page() {
-  // Image & scale
-  const [imageSrc, setImageSrc] = useState(null);
-  const [imageSize, setImageSize] = useState(null); // { width, height }
-  const [pxPerMm, setPxPerMm] = useState(null);
+  // Persistent settings (tileSettings + view + calibration)
+  const [settings, setSettings] = usePersistentSettings();
 
-  // View
-  const [zoom, setZoom] = useState(1);
+  // Unpacked for readability
+  const tileSettings = settings.tileSettings;
+  const zoom = settings.view.zoom;
+  const knownDistanceMm = settings.calibration.knownDistanceMm;
+
+  // Local (non-persistent) states
+  const [imageSrc, setImageSrc] = useState(null);
+  const [imageSize, setImageSize] = useState(null);
+  const [pxPerMm, setPxPerMm] = useState(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
-  // Tile settings
-  const [tileSettings, setTileSettings] = useState({
-    tileWidthMm: 1200,
-    tileLengthMm: 600,
-    groutMm: 2,
-    rotationDeg: 0,
-    pattern: "grid",
+  // Update helpers
+  const updateTileSettings = (newState) =>
+    setSettings((prev) => ({
+      ...prev,
+      tileSettings: { ...prev.tileSettings, ...newState },
+    }));
 
-    tileFillColor: "#797249ff",
-    tileBorderColor: "#534e32",
-    groutColor: "#ffffff",
-    tileOpacity: 0.5,
+  const updateZoom = (value) =>
+    setSettings((prev) => ({
+      ...prev,
+      view: { ...prev.view, zoom: value },
+    }));
 
-    rowOffsetMm: 0, // row shift (mm)
+  const updateKnownDistance = (value) =>
+    setSettings((prev) => ({
+      ...prev,
+      calibration: { ...prev.calibration, knownDistanceMm: value },
+    }));
 
-    // pattern offset (mm)
-    patternOffsetMmX: 0,
-    patternOffsetMmY: 0,
-  });
-
-  // Calibration settings
+  // Calibration state stored outside persistent storage
   const [calibration, setCalibration] = useState({
-    knownDistanceMm: 1000,
-    points: [], // [{x, y}, ...] in image coords
+    points: [],
     isCalibrating: false,
   });
 
-  // Flag to avoid saving before initial load
-  const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
-
-  // --- Load settings from localStorage ---
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        const data = JSON.parse(raw);
-
-        if (data.tileSettings) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setTileSettings((prev) => ({
-            ...prev,
-            ...data.tileSettings,
-          }));
-        }
-        if (typeof data.zoom === "number") {
-          setZoom(data.zoom);
-        }
-        if (typeof data.knownDistanceMm === "number") {
-          setCalibration((prev) => ({
-            ...prev,
-            knownDistanceMm: data.knownDistanceMm,
-          }));
-        }
-      } catch (e) {
-        console.warn("Failed to parse saved settings", e);
-      }
-    }
-
-    // mark that initial load is done (even if nothing was loaded)
-    setHasLoadedFromStorage(true);
-  }, []);
-
-  // --- Save settings to localStorage ---
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!hasLoadedFromStorage) return; // do not save before initial load
-
-    const payload = {
-      tileSettings,
-      zoom,
-      knownDistanceMm: calibration.knownDistanceMm,
-    };
-
-    console.log(payload);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  }, [hasLoadedFromStorage, tileSettings, zoom, calibration.knownDistanceMm]);
-
-  // --- Start calibration ---
+  // Start calibration
   const handleStartCalibration = () => {
     if (!imageSrc) return;
-    setCalibration((prev) => ({
-      ...prev,
+    setCalibration({
       points: [],
       isCalibrating: true,
-    }));
+    });
   };
 
-  // --- Tile usage stats (approximate) ---
+  // Compute stats
   const stats = useMemo(() => {
     const { tileWidthMm, tileLengthMm } = tileSettings;
 
-    if (!imageSize || !pxPerMm || tileWidthMm <= 0 || tileLengthMm <= 0) {
-      return null;
-    }
+    if (!imageSize || !pxPerMm || tileWidthMm <= 0 || tileLengthMm <= 0) return null;
 
-    // Plan size in mm
     const widthMm = imageSize.width / pxPerMm;
     const heightMm = imageSize.height / pxPerMm;
     const areaM2 = (widthMm * heightMm) / 1_000_000;
 
-    // Single tile area
     const tileAreaM2 = (tileWidthMm * tileLengthMm) / 1_000_000;
 
     const rawCount = areaM2 / tileAreaM2;
     const fullTiles = Math.ceil(rawCount);
-    const reserveTiles = Math.ceil(fullTiles * 1.1); // +10% reserve
+    const reserveTiles = Math.ceil(fullTiles * 1.1);
 
-    return {
-      areaM2,
-      tileAreaM2,
-      rawCount,
-      fullTiles,
-      reserveTiles,
-    };
+    return { areaM2, tileAreaM2, rawCount, fullTiles, reserveTiles };
   }, [imageSize, pxPerMm, tileSettings.tileWidthMm, tileSettings.tileLengthMm]);
 
   return (
@@ -143,7 +83,7 @@ export default function Page() {
         fontFamily: "sans-serif",
       }}
     >
-      {/* Left: plan + overlay + export */}
+      {/* LEFT SIDE */}
       <div
         style={{
           flex: 2,
@@ -163,16 +103,16 @@ export default function Page() {
           pxPerMm={pxPerMm}
           setPxPerMm={setPxPerMm}
           zoom={zoom}
-          setZoom={setZoom}
+          setZoom={updateZoom}
           offset={offset}
           setOffset={setOffset}
           tileSettings={tileSettings}
-          calibration={calibration}
+          calibration={{ ...calibration, knownDistanceMm }}
           setCalibration={setCalibration}
         />
       </div>
 
-      {/* Right: controls + stats */}
+      {/* RIGHT SIDE */}
       <div
         style={{
           flex: 1,
@@ -184,11 +124,11 @@ export default function Page() {
       >
         <Sidebar
           tileSettings={tileSettings}
-          onTileSettingsChange={setTileSettings}
+          onTileSettingsChange={updateTileSettings}
           zoom={zoom}
-          onZoomChange={setZoom}
-          calibration={calibration}
-          onChangeKnownDistance={(value) => setCalibration((prev) => ({ ...prev, knownDistanceMm: value }))}
+          onZoomChange={updateZoom}
+          calibration={{ ...calibration, knownDistanceMm }}
+          onChangeKnownDistance={updateKnownDistance}
           onStartCalibration={handleStartCalibration}
           pxPerMm={pxPerMm}
           stats={stats}
