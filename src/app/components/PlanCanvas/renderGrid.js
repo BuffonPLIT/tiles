@@ -21,12 +21,17 @@ export function renderGrid({
 
   if (widthPx <= 0 || heightPx <= 0 || groutPx < 0) return null;
 
-  const stepX = widthPx + groutPx;
-  const stepY = heightPx + groutPx;
+  // 🔹 геометрический зазор между плитками
+  const groutGapPx = groutPx;
+  // 🔹 визуальная толщина линии шва (минимум 1 px, чтобы было видно)
+  const groutStrokeWidth = Math.max(groutPx, 1);
+
+  // 🔹 шаг сетки считаем через groutGapPx (геометрия)
+  const stepX = widthPx + groutGapPx;
+  const stepY = heightPx + groutGapPx;
 
   const rowOffsetPx = (rowOffsetMm || 0) * pxPerMm;
 
-  // NEW: глобальный сдвиг паттерна (в пикселях)
   const patternOffsetX = (patternOffsetMmX || 0) * pxPerMm;
   const patternOffsetY = (patternOffsetMmY || 0) * pxPerMm;
 
@@ -43,7 +48,8 @@ export function renderGrid({
   const rowStart = -extraRows;
   const rowEnd = baseRows + extraRows;
 
-  const tileStroke = 1;
+  // 🔹 делаем границу плитки тоньше, чтобы шов был заметнее
+  const tileStroke = 0.6;
   const elements = [];
 
   const groutStrokeColor = groutColor ?? "red";
@@ -54,10 +60,10 @@ export function renderGrid({
     const shiftX = row * rowOffsetPx;
 
     for (let col = colStart; col <= colEnd; col++) {
-      // 🔑 здесь добавляем глобальный сдвиг сетки
       const baseX = col * stepX + shiftX + patternOffsetX;
       const baseY = row * stepY + patternOffsetY;
 
+      // ---- Плитка ----
       elements.push(
         <rect
           key={`tile-${row}-${col}`}
@@ -72,7 +78,9 @@ export function renderGrid({
         />
       );
 
-      const vX = baseX + widthPx + groutPx / 2;
+      // ---- Швы (правый и нижний) ----
+      // геометрически центр шва — через groutGapPx
+      const vX = baseX + widthPx + groutGapPx / 2;
       const vY1 = baseY;
       const vY2 = baseY + heightPx;
 
@@ -84,12 +92,13 @@ export function renderGrid({
           x2={vX}
           y2={vY2}
           stroke={groutStrokeColor}
-          strokeWidth={groutPx}
+          // визуально не даём шву быть тоньше 1 px
+          strokeWidth={groutStrokeWidth}
           opacity={0.7}
         />
       );
 
-      const hY = baseY + heightPx + groutPx / 2;
+      const hY = baseY + heightPx + groutGapPx / 2;
       const hX1 = baseX;
       const hX2 = baseX + widthPx;
 
@@ -101,7 +110,7 @@ export function renderGrid({
           x2={hX2}
           y2={hY}
           stroke={groutStrokeColor}
-          strokeWidth={groutPx}
+          strokeWidth={groutStrokeWidth}
           opacity={0.7}
         />
       );

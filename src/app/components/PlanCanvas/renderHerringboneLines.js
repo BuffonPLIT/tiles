@@ -13,6 +13,9 @@ export function renderHerringboneLines({ imageSize, pxPerMm, tileWidthMm, groutP
   const lines = [];
   const margin = Math.max(imageSize.width, imageSize.height) * 2;
 
+  // 🔹 визуальная толщина шва (минимум 1 px)
+  const groutStrokeWidth = Math.max(groutPx, 1);
+
   for (let x = -margin; x <= imageSize.width + margin; x += spacing) {
     const xPos = x + offsetX;
 
@@ -24,7 +27,7 @@ export function renderHerringboneLines({ imageSize, pxPerMm, tileWidthMm, groutP
         x2={xPos}
         y2={imageSize.height + margin + offsetY}
         stroke={groutColor ?? "red"}
-        strokeWidth={groutPx}
+        strokeWidth={groutStrokeWidth}
         opacity={0.5}
       />
     );
