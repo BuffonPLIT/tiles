@@ -28,6 +28,7 @@ export default function Page() {
     tileFillColor: "#f5f5f5",
     tileBorderColor: "#ffff00",
     groutColor: "#ff0000",
+    tileOpacity: 0.5,
 
     rowOffsetMm: 0, // NEW: сдвиг следующего ряда относительно предыдущего (мм)
   });

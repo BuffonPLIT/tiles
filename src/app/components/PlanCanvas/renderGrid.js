@@ -10,6 +10,7 @@ export function renderGrid({
   tileBorderColor,
   groutColor,
   rowOffsetMm,
+  tileOpacity,
 }) {
   if (!imageSize || !pxPerMm) return null;
 
@@ -66,9 +67,9 @@ export function renderGrid({
           width={widthPx}
           height={heightPx}
           fill={fillColor}
+          fillOpacity={tileOpacity ?? 1} // NEW
           stroke={tileStrokeColor}
-          strokeWidth={tileStroke} // NOT grout, just outline
-          opacity={0.9}
+          strokeWidth={tileStroke}
         />
       );
 

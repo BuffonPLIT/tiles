@@ -41,6 +41,7 @@ export function renderTiles({ imageSize, imageSrc, pxPerMm, tileSettings, calibr
       tileBorderColor,
       groutColor,
       rowOffsetMm: tileSettings.rowOffsetMm,
+      tileOpacity: tileSettings.tileOpacity,
     });
   } else {
     tilesContent = renderHerringboneLines({

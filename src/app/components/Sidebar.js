@@ -111,6 +111,23 @@ export default function Sidebar({
             />
           </label>
           <label>
+            Прозрачность плитки:{" "}
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={tileSettings.tileOpacity ?? 1}
+              onChange={(e) =>
+                onTileSettingsChange({
+                  ...tileSettings,
+                  tileOpacity: Number(e.target.value),
+                })
+              }
+            />
+            {Math.round((tileSettings.tileOpacity ?? 1) * 100)}%
+          </label>
+          <label>
             Цвет границы плитки:{" "}
             <input
               type="color"
@@ -183,7 +200,7 @@ export default function Sidebar({
         </div>
       </section>
 
-      <section>
+      {/* <section>
         <h3>Расход плитки (приблизительно)</h3>
         {stats ? (
           <div style={{ fontSize: 14 }}>
@@ -200,7 +217,7 @@ export default function Sidebar({
         ) : (
           <p style={{ fontSize: 13 }}>Для расчёта нужно: загрузить план и выполнить калибровку масштаба.</p>
         )}
-      </section>
+      </section> */}
     </>
   );
 }
