@@ -62,8 +62,12 @@ export function renderTiles({ imageSize, imageSrc, pxPerMm, tileSettings, calibr
       imageSize,
       pxPerMm,
       tileWidthMm,
+      tileLengthMm,
       groutPx,
       groutColor,
+      tileFillColor,
+      tileBorderColor,
+      tileOpacity,
       patternOffsetMmX,
       patternOffsetMmY,
     });
