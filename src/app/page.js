@@ -27,7 +27,7 @@ export default function Page() {
 
     tileFillColor: "#a72ac0",
     tileBorderColor: "#000000",
-    groutColor: "#00ff22",
+    groutColor: "#ffffff",
     tileOpacity: 0.5,
 
     rowOffsetMm: 0, // NEW: сдвиг следующего ряда относительно предыдущего (мм)
