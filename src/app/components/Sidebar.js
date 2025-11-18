@@ -60,7 +60,7 @@ export default function Sidebar({
               }
             />
           </label>
-          {/* New: layout type */}
+
           <label style={{ marginTop: 8 }}>
             <input
               type="checkbox"
@@ -73,6 +73,52 @@ export default function Sidebar({
               }
             />{" "}
             Укладка ёлочкой (herringbone)
+          </label>
+        </div>
+      </section>
+
+      {/* NEW: цвета */}
+      <section>
+        <h3>Цвета</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <label>
+            Цвет плитки:{" "}
+            <input
+              type="color"
+              value={tileSettings.tileFillColor}
+              onChange={(e) =>
+                onTileSettingsChange({
+                  ...tileSettings,
+                  tileFillColor: e.target.value,
+                })
+              }
+            />
+          </label>
+          <label>
+            Цвет границы плитки:{" "}
+            <input
+              type="color"
+              value={tileSettings.tileBorderColor}
+              onChange={(e) =>
+                onTileSettingsChange({
+                  ...tileSettings,
+                  tileBorderColor: e.target.value,
+                })
+              }
+            />
+          </label>
+          <label>
+            Цвет шва:{" "}
+            <input
+              type="color"
+              value={tileSettings.groutColor}
+              onChange={(e) =>
+                onTileSettingsChange({
+                  ...tileSettings,
+                  groutColor: e.target.value,
+                })
+              }
+            />
           </label>
         </div>
       </section>

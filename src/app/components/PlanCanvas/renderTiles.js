@@ -5,7 +5,7 @@ import { renderHerringboneLines } from "./renderHerringboneLines";
 export function renderTiles({ imageSize, imageSrc, pxPerMm, tileSettings, calibration }) {
   if (!imageSize || !pxPerMm || !imageSrc) return null;
 
-  const { tileWidthMm, tileLengthMm, groutMm, rotationDeg, pattern } = tileSettings;
+  const { tileWidthMm, tileLengthMm, groutMm, rotationDeg, pattern, tileFillColor, tileBorderColor, groutColor } = tileSettings;
 
   const groutPx = groutMm * pxPerMm;
   if (tileWidthMm <= 0 || tileLengthMm <= 0 || groutPx <= 0) return null;
@@ -28,7 +28,6 @@ export function renderTiles({ imageSize, imageSrc, pxPerMm, tileSettings, calibr
     );
   }
 
-  const strokeWidth = groutPx > 1 ? groutPx : 1;
   let tilesContent = null;
 
   if (pattern === "grid") {
@@ -38,7 +37,9 @@ export function renderTiles({ imageSize, imageSrc, pxPerMm, tileSettings, calibr
       tileWidthMm,
       tileLengthMm,
       groutPx,
-      strokeWidth,
+      tileFillColor,
+      tileBorderColor,
+      groutColor,
     });
   } else {
     tilesContent = renderHerringboneLines({
@@ -46,11 +47,10 @@ export function renderTiles({ imageSize, imageSrc, pxPerMm, tileSettings, calibr
       pxPerMm,
       tileWidthMm,
       groutPx,
-      strokeWidth,
+      groutColor,
     });
   }
 
-  // если по какой-то причине сетка не нарисовалась
   if (!tilesContent) {
     return calibrationLine;
   }
