@@ -31,6 +31,10 @@ export default function Page() {
     tileOpacity: 0.5,
 
     rowOffsetMm: 0, // NEW: сдвиг следующего ряда относительно предыдущего (мм)
+
+    // NEW: смещение сетки относительно плана (мм)
+    patternOffsetMmX: 0, // вправо/влево
+    patternOffsetMmY: 0, // вниз/вверх (ось Y SVG)
   });
 
   // Calibration settings

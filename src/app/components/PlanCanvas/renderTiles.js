@@ -5,15 +5,27 @@ import { renderHerringboneLines } from "./renderHerringboneLines";
 export function renderTiles({ imageSize, imageSrc, pxPerMm, tileSettings, calibration }) {
   if (!imageSize || !pxPerMm || !imageSrc) return null;
 
-  const { tileWidthMm, tileLengthMm, groutMm, rotationDeg, pattern, tileFillColor, tileBorderColor, groutColor } = tileSettings;
+  const {
+    tileWidthMm,
+    tileLengthMm,
+    groutMm,
+    rotationDeg,
+    pattern,
+    tileFillColor,
+    tileBorderColor,
+    groutColor,
+    rowOffsetMm,
+    tileOpacity,
+    patternOffsetMmX,
+    patternOffsetMmY,
+  } = tileSettings;
 
   const groutPx = groutMm * pxPerMm;
-  if (tileWidthMm <= 0 || tileLengthMm <= 0 || groutPx <= 0) return null;
+  if (tileWidthMm <= 0 || tileLengthMm <= 0 || groutPx < 0) return null;
 
   const centerX = imageSize.width / 2;
   const centerY = imageSize.height / 2;
 
-  // Calibration line
   let calibrationLine = null;
   if (calibration.points && calibration.points.length === 2) {
     calibrationLine = (
@@ -40,8 +52,10 @@ export function renderTiles({ imageSize, imageSrc, pxPerMm, tileSettings, calibr
       tileFillColor,
       tileBorderColor,
       groutColor,
-      rowOffsetMm: tileSettings.rowOffsetMm,
-      tileOpacity: tileSettings.tileOpacity,
+      rowOffsetMm,
+      tileOpacity,
+      patternOffsetMmX,
+      patternOffsetMmY,
     });
   } else {
     tilesContent = renderHerringboneLines({
@@ -50,12 +64,12 @@ export function renderTiles({ imageSize, imageSrc, pxPerMm, tileSettings, calibr
       tileWidthMm,
       groutPx,
       groutColor,
+      patternOffsetMmX,
+      patternOffsetMmY,
     });
   }
 
-  if (!tilesContent) {
-    return calibrationLine;
-  }
+  if (!tilesContent) return calibrationLine;
 
   return (
     <>

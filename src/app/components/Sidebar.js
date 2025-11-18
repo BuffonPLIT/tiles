@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function Sidebar({
+function Sidebar({
   tileSettings,
   onTileSettingsChange,
   zoom,
@@ -23,7 +23,7 @@ export default function Sidebar({
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           {/* уже существующие поля */}
           <label>
-            Ширина плитки (мм):{" "}
+            Длина плитки (мм):{" "}
             <input
               type="number"
               value={tileSettings.tileWidthMm ?? ""}
@@ -36,7 +36,7 @@ export default function Sidebar({
             />
           </label>
           <label>
-            Длина плитки (мм):{" "}
+            Ширина плитки (мм):{" "}
             <input
               type="number"
               value={tileSettings.tileLengthMm ?? ""}
@@ -155,6 +155,38 @@ export default function Sidebar({
           </label>
         </div>
       </section>
+      <section>
+        <h3>Смещение сетки</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <label>
+            Смещение по X (мм):{" "}
+            <input
+              type="number"
+              value={tileSettings.patternOffsetMmX ?? 0}
+              onChange={(e) =>
+                onTileSettingsChange({
+                  ...tileSettings,
+                  patternOffsetMmX: e.target.value === "" ? 0 : Number(e.target.value),
+                })
+              }
+            />
+          </label>
+          <label>
+            Смещение по Y (мм):{" "}
+            <input
+              type="number"
+              value={tileSettings.patternOffsetMmY ?? 0}
+              onChange={(e) =>
+                onTileSettingsChange({
+                  ...tileSettings,
+                  patternOffsetMmY: e.target.value === "" ? 0 : Number(e.target.value),
+                })
+              }
+            />
+          </label>
+          <small style={{ color: "#666" }}>Положительное X — вправо, положительное Y — вниз.</small>
+        </div>
+      </section>
 
       <section>
         <h3>Поворот сетки</h3>
@@ -221,3 +253,5 @@ export default function Sidebar({
     </>
   );
 }
+
+export default React.memo(Sidebar);

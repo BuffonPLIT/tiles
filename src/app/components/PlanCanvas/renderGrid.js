@@ -11,30 +11,30 @@ export function renderGrid({
   groutColor,
   rowOffsetMm,
   tileOpacity,
+  patternOffsetMmX,
+  patternOffsetMmY,
 }) {
   if (!imageSize || !pxPerMm) return null;
 
-  // Use exact user-entered size, without swapping
-  const widthPx = tileWidthMm * pxPerMm; // tile width along X
-  const heightPx = tileLengthMm * pxPerMm; // tile length along Y
+  const widthPx = tileWidthMm * pxPerMm;
+  const heightPx = tileLengthMm * pxPerMm;
 
   if (widthPx <= 0 || heightPx <= 0 || groutPx < 0) return null;
 
-  // spacing between tile origins
   const stepX = widthPx + groutPx;
   const stepY = heightPx + groutPx;
 
-  // row shift in px
   const rowOffsetPx = (rowOffsetMm || 0) * pxPerMm;
 
-  // base counts to cover image rect
+  // NEW: глобальный сдвиг паттерна (в пикселях)
+  const patternOffsetX = (patternOffsetMmX || 0) * pxPerMm;
+  const patternOffsetY = (patternOffsetMmY || 0) * pxPerMm;
+
   const baseCols = Math.ceil(imageSize.width / stepX);
   const baseRows = Math.ceil(imageSize.height / stepY);
 
-  // diagonal of image — conservative measure of how far corners can go on rotation
   const diag = Math.sqrt(imageSize.width * imageSize.width + imageSize.height * imageSize.height);
 
-  // extra rows/cols to safely cover rotated image + row offsets
   const extraCols = Math.ceil(diag / stepX) + 4;
   const extraRows = Math.ceil(diag / stepY) + 4;
 
@@ -43,7 +43,7 @@ export function renderGrid({
   const rowStart = -extraRows;
   const rowEnd = baseRows + extraRows;
 
-  const tileStroke = 1; // visual tile border width
+  const tileStroke = 1;
   const elements = [];
 
   const groutStrokeColor = groutColor ?? "red";
@@ -51,14 +51,13 @@ export function renderGrid({
   const fillColor = tileFillColor ?? "none";
 
   for (let row = rowStart; row <= rowEnd; row++) {
-    // shift for this row
     const shiftX = row * rowOffsetPx;
 
     for (let col = colStart; col <= colEnd; col++) {
-      const baseX = col * stepX + shiftX;
-      const baseY = row * stepY;
+      // 🔑 здесь добавляем глобальный сдвиг сетки
+      const baseX = col * stepX + shiftX + patternOffsetX;
+      const baseY = row * stepY + patternOffsetY;
 
-      // ---- Tile ----
       elements.push(
         <rect
           key={`tile-${row}-${col}`}
@@ -67,15 +66,12 @@ export function renderGrid({
           width={widthPx}
           height={heightPx}
           fill={fillColor}
-          fillOpacity={tileOpacity ?? 1} // NEW
+          fillOpacity={tileOpacity ?? 1}
           stroke={tileStrokeColor}
           strokeWidth={tileStroke}
         />
       );
 
-      // ---- Grout segments (right & bottom edges) ----
-
-      // vertical grout on the right
       const vX = baseX + widthPx + groutPx / 2;
       const vY1 = baseY;
       const vY2 = baseY + heightPx;
@@ -93,7 +89,6 @@ export function renderGrid({
         />
       );
 
-      // horizontal grout at the bottom
       const hY = baseY + heightPx + groutPx / 2;
       const hX1 = baseX;
       const hX2 = baseX + widthPx;

@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { renderTiles } from "./renderTiles";
 
-export default function PlanSvg({
+function PlanSvg({
   imageSrc,
   imageSize,
   zoom,
@@ -20,8 +20,37 @@ export default function PlanSvg({
   onMouseLeave,
   onClick,
 }) {
+  // 🔥 вызывается всегда, даже если imageSrc отсутствует
+  const tilesOverlay = useMemo(() => {
+    if (!imageSrc || !imageSize) return null;
+
+    return renderTiles({
+      imageSize,
+      imageSrc,
+      pxPerMm,
+      tileSettings,
+      calibration,
+    });
+  }, [imageSize, imageSrc, pxPerMm, tileSettings, calibration]);
+
+  // ❗ только тут проверяем, что показывать
   if (!imageSrc || !imageSize) {
-    return null;
+    return (
+      <div
+        ref={containerRef}
+        style={{
+          flex: 1,
+          border: "1px solid #ccc",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: 300,
+          color: "#777",
+        }}
+      >
+        Загрузите изображение плана
+      </div>
+    );
   }
 
   const cursor = calibration.isCalibrating ? "crosshair" : isPanning ? "grabbing" : "grab";
@@ -54,15 +83,11 @@ export default function PlanSvg({
       >
         <svg ref={svgRef} width={imageSize.width} height={imageSize.height}>
           <image href={imageSrc} x="0" y="0" width={imageSize.width} height={imageSize.height} />
-          {renderTiles({
-            imageSize,
-            imageSrc,
-            pxPerMm,
-            tileSettings,
-            calibration,
-          })}
+          {tilesOverlay}
         </svg>
       </div>
     </div>
   );
 }
+
+export default React.memo(PlanSvg);
