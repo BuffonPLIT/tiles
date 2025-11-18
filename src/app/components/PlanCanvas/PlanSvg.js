@@ -20,7 +20,8 @@ function PlanSvg({
   onMouseLeave,
   onClick,
 }) {
-  // 🔥 вызывается всегда, даже если imageSrc отсутствует
+  // Сетка пересчитывается ТОЛЬКО при изменении геометрии и настроек,
+  // но НЕ при zoom / offset
   const tilesOverlay = useMemo(() => {
     if (!imageSrc || !imageSize) return null;
 
@@ -33,7 +34,6 @@ function PlanSvg({
     });
   }, [imageSize, imageSrc, pxPerMm, tileSettings, calibration]);
 
-  // ❗ только тут проверяем, что показывать
   if (!imageSrc || !imageSize) {
     return (
       <div

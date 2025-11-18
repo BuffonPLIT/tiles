@@ -150,7 +150,7 @@ function Sidebar({
       <section>
         <h3>Масштаб (Zoom)</h3>
         <div>
-          <input type="range" min={0.25} max={3} step={0.05} value={zoom} onChange={(e) => onZoomChange(Number(e.target.value))} />
+          <input type="range" min={0.25} max={10} step={0.05} value={zoom} onChange={(e) => onZoomChange(Number(e.target.value))} />
           <span style={{ marginLeft: 8 }}>{Math.round(zoom * 100)}%</span>
         </div>
       </section>

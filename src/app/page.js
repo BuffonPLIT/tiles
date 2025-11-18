@@ -19,15 +19,15 @@ export default function Page() {
 
   // Tile settings
   const [tileSettings, setTileSettings] = useState({
-    tileWidthMm: 596,
-    tileLengthMm: 146,
+    tileWidthMm: 1200,
+    tileLengthMm: 600,
     groutMm: 2,
     rotationDeg: 0,
     pattern: "grid",
 
-    tileFillColor: "#f5f5f5",
-    tileBorderColor: "#ffff00",
-    groutColor: "#ff0000",
+    tileFillColor: "#a72ac0",
+    tileBorderColor: "#000000",
+    groutColor: "#00ff22",
     tileOpacity: 0.5,
 
     rowOffsetMm: 0, // NEW: сдвиг следующего ряда относительно предыдущего (мм)

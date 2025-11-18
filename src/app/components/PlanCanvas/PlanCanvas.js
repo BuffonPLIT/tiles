@@ -25,6 +25,10 @@ export default function PlanCanvas({
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState(null); // {mouseX, mouseY, offsetX, offsetY}
 
+  // ⚡ refs для rAF-оптимизации pan
+  const panFrameRef = useRef(null);
+  const nextOffsetRef = useRef(offset);
+
   // === File upload ===
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -71,6 +75,9 @@ export default function PlanCanvas({
       offsetX: offset.x,
       offsetY: offset.y,
     });
+
+    // ⚡ сбрасываем "следующий" offset на текущий
+    nextOffsetRef.current = offset;
   };
 
   const handleMouseMove = (e) => {
@@ -79,20 +86,40 @@ export default function PlanCanvas({
     const dx = e.clientX - panStart.mouseX;
     const dy = e.clientY - panStart.mouseY;
 
-    setOffset({
+    const newOffset = {
       x: panStart.offsetX + dx,
       y: panStart.offsetY + dy,
-    });
+    };
+
+    // ⚡ только сохраняем offset, без немедленного setOffset
+    nextOffsetRef.current = newOffset;
+
+    // ⚡ один setOffset на кадр через requestAnimationFrame
+    if (panFrameRef.current === null) {
+      panFrameRef.current = window.requestAnimationFrame(() => {
+        setOffset(nextOffsetRef.current);
+        panFrameRef.current = null;
+      });
+    }
+  };
+
+  const stopPanning = () => {
+    setIsPanning(false);
+    setPanStart(null);
+
+    // ⚡ отменяем запланированный кадр, если есть
+    if (panFrameRef.current !== null) {
+      window.cancelAnimationFrame(panFrameRef.current);
+      panFrameRef.current = null;
+    }
   };
 
   const handleMouseUp = () => {
-    setIsPanning(false);
-    setPanStart(null);
+    stopPanning();
   };
 
   const handleMouseLeave = () => {
-    setIsPanning(false);
-    setPanStart(null);
+    stopPanning();
   };
 
   // === Calibration click on SVG ===
@@ -225,7 +252,6 @@ export default function PlanCanvas({
 
       {imageSrc && (
         <>
-          {/* скрытое изображение для получения naturalWidth/naturalHeight */}
           {!imageSize && <img ref={hiddenImgRef} src={imageSrc} alt="hidden" style={{ display: "none" }} onLoad={handleHiddenImageLoad} />}
 
           <PlanSvg
