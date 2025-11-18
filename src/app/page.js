@@ -25,8 +25,8 @@ export default function Page() {
     rotationDeg: 0,
     pattern: "grid",
 
-    tileFillColor: "#a72ac0",
-    tileBorderColor: "#000000",
+    tileFillColor: "#797249ff",
+    tileBorderColor: "#534e32",
     groutColor: "#ffffff",
     tileOpacity: 0.5,
 
@@ -84,7 +84,7 @@ export default function Page() {
       zoom,
       knownDistanceMm: calibration.knownDistanceMm,
     };
-
+    console.log(payload);
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   }, [tileSettings, zoom, calibration.knownDistanceMm]);
 
