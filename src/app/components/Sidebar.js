@@ -12,7 +12,7 @@ function Sidebar({
   onChangeKnownDistance,
   onStartCalibration,
   pxPerMm,
-  stats,
+  onCenterView,
 }) {
   // Local copy of settings to reduce renders (debounced sync)
   const [localSettings, setLocalSettings] = useState(tileSettings);
@@ -191,10 +191,26 @@ function Sidebar({
       {/*             ZOOM              */}
       {/* ============================= */}
       <section>
-        <h3>Масштаб</h3>
-        <div>
+        <h3>Масштаб (Zoom)</h3>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <input type="range" min={0.25} max={10} step={0.05} value={zoom} onChange={(e) => onZoomChange(Number(e.target.value))} />
-          <span style={{ marginLeft: 8 }}>{Math.round(zoom * 100)}%</span>
+
+          <span>{Math.round(zoom * 100)}%</span>
+
+          <button
+            onClick={onCenterView}
+            style={{
+              padding: "4px 8px",
+              fontSize: 12,
+              cursor: "pointer",
+              border: "1px solid #ccc",
+              borderRadius: 4,
+              background: "#f2f2f2",
+            }}
+          >
+            Центрировать
+          </button>
         </div>
       </section>
 

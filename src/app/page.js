@@ -8,6 +8,8 @@ import PlanCanvas from "./components/PlanCanvas/PlanCanvas";
 import { usePersistentSettings } from "./hooks/usePersistentSettings";
 
 export default function Page() {
+  const centerView = () => setOffset({ x: 0, y: 0 });
+
   // Persistent settings (tileSettings + view + calibration)
   const [settings, setSettings] = usePersistentSettings();
 
@@ -132,6 +134,7 @@ export default function Page() {
           onStartCalibration={handleStartCalibration}
           pxPerMm={pxPerMm}
           stats={stats}
+          onCenterView={centerView}
         />
       </div>
     </div>

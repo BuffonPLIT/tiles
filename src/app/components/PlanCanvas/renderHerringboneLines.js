@@ -27,7 +27,7 @@ export function renderHerringboneLines({
   //   projected tile width + projected grout width
   //   BUT grout projected is groutPx * sqrt(2)
   // ----------------------------------------------------
-  const lineSpacingX = widthPx / Math.SQRT2 + groutPx * Math.SQRT2;
+  const lineSpacingX = widthPx / Math.SQRT2 + groutPx / Math.SQRT2;
   if (!Number.isFinite(lineSpacingX) || lineSpacingX <= 0) return null;
 
   // ----------------------------------------------------
