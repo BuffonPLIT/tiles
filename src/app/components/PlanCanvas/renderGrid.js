@@ -13,38 +13,51 @@ export function renderGrid({
 }) {
   if (!imageSize || !pxPerMm) return null;
 
-  // ВАЖНО: используем размеры как есть, НЕ min/max
-  const widthPx = tileWidthMm * pxPerMm; // ширина плитки по X
-  const heightPx = tileLengthMm * pxPerMm; // длина плитки по Y
+  // Use exact user-entered size, without swapping
+  const widthPx = tileWidthMm * pxPerMm; // tile width along X
+  const heightPx = tileLengthMm * pxPerMm; // tile length along Y
 
   if (widthPx <= 0 || heightPx <= 0 || groutPx < 0) return null;
 
-  // Шов = расстояние между плитками
+  // spacing between tile origins
   const stepX = widthPx + groutPx;
   const stepY = heightPx + groutPx;
 
-  // Сдвиг ряда в пикселях
+  // row shift in px
   const rowOffsetPx = (rowOffsetMm || 0) * pxPerMm;
 
-  const cols = Math.ceil(imageSize.width / stepX) + 4;
-  const rows = Math.ceil(imageSize.height / stepY) + 4;
+  // base counts to cover image rect
+  const baseCols = Math.ceil(imageSize.width / stepX);
+  const baseRows = Math.ceil(imageSize.height / stepY);
 
-  const tileStroke = 1; // визуальная толщина границы плитки
+  // diagonal of image — conservative measure of how far corners can go on rotation
+  const diag = Math.sqrt(imageSize.width * imageSize.width + imageSize.height * imageSize.height);
+
+  // extra rows/cols to safely cover rotated image + row offsets
+  const extraCols = Math.ceil(diag / stepX) + 4;
+  const extraRows = Math.ceil(diag / stepY) + 4;
+
+  const colStart = -extraCols;
+  const colEnd = baseCols + extraCols;
+  const rowStart = -extraRows;
+  const rowEnd = baseRows + extraRows;
+
+  const tileStroke = 1; // visual tile border width
   const elements = [];
 
   const groutStrokeColor = groutColor ?? "red";
   const tileStrokeColor = tileBorderColor ?? "yellow";
   const fillColor = tileFillColor ?? "none";
 
-  for (let row = -2; row < rows; row++) {
-    // сдвиг этого ряда по X
+  for (let row = rowStart; row <= rowEnd; row++) {
+    // shift for this row
     const shiftX = row * rowOffsetPx;
 
-    for (let col = -2; col < cols; col++) {
+    for (let col = colStart; col <= colEnd; col++) {
       const baseX = col * stepX + shiftX;
       const baseY = row * stepY;
 
-      // ---- Плитка ----
+      // ---- Tile ----
       elements.push(
         <rect
           key={`tile-${row}-${col}`}
@@ -54,14 +67,14 @@ export function renderGrid({
           height={heightPx}
           fill={fillColor}
           stroke={tileStrokeColor}
-          strokeWidth={tileStroke} // это не шов, просто контур
+          strokeWidth={tileStroke} // NOT grout, just outline
           opacity={0.9}
         />
       );
 
-      // ---- Швы (красные сегменты по правому и нижнему краю плитки) ----
+      // ---- Grout segments (right & bottom edges) ----
 
-      // вертикальный шов справа
+      // vertical grout on the right
       const vX = baseX + widthPx + groutPx / 2;
       const vY1 = baseY;
       const vY2 = baseY + heightPx;
@@ -79,7 +92,7 @@ export function renderGrid({
         />
       );
 
-      // горизонтальный шов снизу
+      // horizontal grout at the bottom
       const hY = baseY + heightPx + groutPx / 2;
       const hX1 = baseX;
       const hX2 = baseX + widthPx;
