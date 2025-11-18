@@ -86,7 +86,7 @@ export default function Page() {
       {/* LEFT SIDE */}
       <div
         style={{
-          flex: 2,
+          flex: 3,
           borderRight: "1px solid #ddd",
           padding: 16,
           overflow: "hidden",

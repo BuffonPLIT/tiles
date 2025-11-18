@@ -1,4 +1,7 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
+import PopupGeometryModal from "./PopupGeometryModal";
 
 function Sidebar({
   tileSettings,
@@ -9,28 +12,30 @@ function Sidebar({
   onChangeKnownDistance,
   onStartCalibration,
   pxPerMm,
-  stats, // currently unused, but passed from parent
+  stats,
 }) {
-  // Local copy of tile settings for debounced updates
+  // Local copy of settings to reduce renders (debounced sync)
   const [localSettings, setLocalSettings] = useState(tileSettings);
 
-  // Sync local state when parent tileSettings change (e.g. after localStorage load)
+  // Modal state for geometry editing
+  const [isGeoModalOpen, setGeoModalOpen] = useState(false);
+
+  // Sync local state when parent tileSettings change (e.g. after loading from storage)
   useEffect(() => {
     setLocalSettings(tileSettings);
   }, [tileSettings]);
 
-  // Debounce: apply changes to parent after 700ms of inactivity
+  // Debounced propagation of changes to parent state (700ms delay)
   useEffect(() => {
     const timer = setTimeout(() => {
-      // avoid redundant update when local state just mirrors props
-      if (localSettings === tileSettings) return;
+      if (localSettings === tileSettings) return; // skip redundant sync
       onTileSettingsChange(localSettings);
     }, 700);
 
     return () => clearTimeout(timer);
   }, [localSettings, tileSettings, onTileSettingsChange]);
 
-  // Update helper
+  // Helper: update a single field in local state
   const update = (field, value) => {
     setLocalSettings((prev) => ({
       ...prev,
@@ -40,36 +45,37 @@ function Sidebar({
 
   return (
     <>
+      {/* Geometry popup */}
+      <PopupGeometryModal
+        open={isGeoModalOpen}
+        onClose={() => setGeoModalOpen(false)}
+        initialValues={{
+          tileWidthMm: localSettings.tileWidthMm,
+          tileLengthMm: localSettings.tileLengthMm,
+          groutMm: localSettings.groutMm,
+        }}
+        onSave={(newValues) => {
+          // Batch update for performance
+          setLocalSettings((prev) => ({
+            ...prev,
+            ...newValues,
+          }));
+        }}
+      />
+
+      {/* ============================= */}
+      {/*      TILE GEOMETRY (POPUP)    */}
+      {/* ============================= */}
       <section>
-        <h3>Параметры плитки</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <label>
-            Длина плитки (мм):{" "}
-            <input
-              type="number"
-              value={localSettings.tileWidthMm ?? ""}
-              onChange={(e) => update("tileWidthMm", e.target.value === "" ? 0 : Number(e.target.value))}
-            />
-          </label>
+        <h3>Геометрия плитки</h3>
 
-          <label>
-            Ширина плитки (мм):{" "}
-            <input
-              type="number"
-              value={localSettings.tileLengthMm ?? ""}
-              onChange={(e) => update("tileLengthMm", e.target.value === "" ? 0 : Number(e.target.value))}
-            />
-          </label>
+        <button onClick={() => setGeoModalOpen(true)}>Изменить геометрию…</button>
 
-          <label>
-            Толщина шва (мм):{" "}
-            <input
-              type="number"
-              value={localSettings.groutMm ?? ""}
-              onChange={(e) => update("groutMm", e.target.value === "" ? 0 : Number(e.target.value))}
-            />
-          </label>
+        <div style={{ marginTop: 6, fontSize: 12, color: "#666" }}>
+          Текущие размеры: {localSettings.tileWidthMm} × {localSettings.tileLengthMm} мм, шов {localSettings.groutMm} мм
+        </div>
 
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
           <label>
             Сдвиг ряда (мм):{" "}
             <input
@@ -90,16 +96,19 @@ function Sidebar({
         </div>
       </section>
 
+      {/* ============================= */}
+      {/*            COLORS             */}
+      {/* ============================= */}
       <section>
         <h3>Цвета</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label>
             Цвет плитки:{" "}
             <input type="color" value={localSettings.tileFillColor} onChange={(e) => update("tileFillColor", e.target.value)} />
           </label>
 
           <label>
-            Прозрачность плитки:{" "}
+            Прозрачность:{" "}
             <input
               type="range"
               min="0"
@@ -107,12 +116,12 @@ function Sidebar({
               step="0.05"
               value={localSettings.tileOpacity ?? 1}
               onChange={(e) => update("tileOpacity", Number(e.target.value))}
-            />
+            />{" "}
             {Math.round((localSettings.tileOpacity ?? 1) * 100)}%
           </label>
 
           <label>
-            Цвет границы плитки:{" "}
+            Цвет границы:{" "}
             <input type="color" value={localSettings.tileBorderColor} onChange={(e) => update("tileBorderColor", e.target.value)} />
           </label>
 
@@ -122,11 +131,14 @@ function Sidebar({
         </div>
       </section>
 
+      {/* ============================= */}
+      {/*         OFFSET & ROTATION     */}
+      {/* ============================= */}
       <section>
-        <h3>Смещение сетки</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <h3>Смещение и поворот</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label>
-            Смещение по X (мм):{" "}
+            Смещение X (мм):{" "}
             <input
               type="number"
               value={localSettings.patternOffsetMmX ?? 0}
@@ -135,7 +147,7 @@ function Sidebar({
           </label>
 
           <label>
-            Смещение по Y (мм):{" "}
+            Смещение Y (мм):{" "}
             <input
               type="number"
               value={localSettings.patternOffsetMmY ?? 0}
@@ -143,29 +155,32 @@ function Sidebar({
             />
           </label>
 
+          <label>
+            Поворот (°):{" "}
+            <input type="number" value={localSettings.rotationDeg} onChange={(e) => update("rotationDeg", Number(e.target.value) || 0)} />
+          </label>
+
           <small style={{ color: "#666" }}>Положительное X — вправо, положительное Y — вниз.</small>
         </div>
       </section>
 
+      {/* ============================= */}
+      {/*             ZOOM              */}
+      {/* ============================= */}
       <section>
-        <h3>Поворот сетки</h3>
-        <label>
-          Угол (°):{" "}
-          <input type="number" value={localSettings.rotationDeg} onChange={(e) => update("rotationDeg", Number(e.target.value) || 0)} />
-        </label>
-      </section>
-
-      <section>
-        <h3>Масштаб (Zoom)</h3>
+        <h3>Масштаб</h3>
         <div>
           <input type="range" min={0.25} max={10} step={0.05} value={zoom} onChange={(e) => onZoomChange(Number(e.target.value))} />
           <span style={{ marginLeft: 8 }}>{Math.round(zoom * 100)}%</span>
         </div>
       </section>
 
+      {/* ============================= */}
+      {/*         CALIBRATION          */}
+      {/* ============================= */}
       <section>
-        <h3>Калибровка масштаба</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <h3>Калибровка</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label>
             Известное расстояние (мм):{" "}
             <input type="number" value={calibration.knownDistanceMm} onChange={(e) => onChangeKnownDistance(Number(e.target.value) || 0)} />
@@ -174,9 +189,9 @@ function Sidebar({
           <button onClick={onStartCalibration}>
             {calibration.isCalibrating ? "Кликните по двум точкам на плане..." : "Начать калибровку"}
           </button>
-        </div>
 
-        <div style={{ marginTop: 4, fontSize: 12 }}>Текущий масштаб: {pxPerMm ? `${pxPerMm.toFixed(3)} px / мм` : "не откалиброван"}</div>
+          <div style={{ marginTop: 4, fontSize: 12 }}>Текущий масштаб: {pxPerMm ? `${pxPerMm.toFixed(3)} px / мм` : "не откалиброван"}</div>
+        </div>
       </section>
     </>
   );
