@@ -1,4 +1,7 @@
+"use client";
+
 import React, { useRef, useState } from "react";
+import PlanSvg from "./PlanSvg";
 
 export default function PlanCanvas({
   imageSrc,
@@ -22,6 +25,7 @@ export default function PlanCanvas({
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState(null); // {mouseX, mouseY, offsetX, offsetY}
 
+  // === File upload ===
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -45,7 +49,7 @@ export default function PlanCanvas({
     reader.readAsDataURL(file);
   };
 
-  // Hidden <img> to read natural size
+  // === Hidden image natural size ===
   const handleHiddenImageLoad = (e) => {
     const img = e.currentTarget;
     setImageSize({
@@ -54,14 +58,11 @@ export default function PlanCanvas({
     });
   };
 
-  // Mouse down for panning
+  // === Panning ===
   const handleMouseDown = (e) => {
     if (!imageSrc) return;
-    if (calibration.isCalibrating) {
-      // During calibration we do not pan
-      return;
-    }
-    if (e.button !== 0) return; // only left mouse button
+    if (calibration.isCalibrating) return;
+    if (e.button !== 0) return; // only left button
 
     setIsPanning(true);
     setPanStart({
@@ -84,20 +85,25 @@ export default function PlanCanvas({
     });
   };
 
-  const stopPanning = () => {
+  const handleMouseUp = () => {
     setIsPanning(false);
     setPanStart(null);
   };
 
-  // Click for calibration points
-  const handleClickForCalibration = (e) => {
+  const handleMouseLeave = () => {
+    setIsPanning(false);
+    setPanStart(null);
+  };
+
+  // === Calibration click on SVG ===
+  const handleCanvasClick = (e) => {
     if (!calibration.isCalibrating || !svgRef.current || !imageSize) return;
 
     const rect = svgRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / zoom;
     const y = (e.clientY - rect.top) / zoom;
 
-    const newPoints = [...calibration.points, { x, y }];
+    const newPoints = [...(calibration.points || []), { x, y }];
 
     if (newPoints.length === 2) {
       const [p1, p2] = newPoints;
@@ -123,119 +129,7 @@ export default function PlanCanvas({
     }
   };
 
-  // Tile grid: herringbone pattern (ёлочка) via <polygon>
-  const renderTiles = () => {
-    if (!imageSize || !pxPerMm || !imageSrc) return null;
-
-    const { tileWidthMm, tileLengthMm, groutMm, rotationDeg, pattern } = tileSettings;
-
-    const w = tileWidthMm * pxPerMm;
-    const h = tileLengthMm * pxPerMm;
-    const grout = groutMm * pxPerMm;
-
-    if (w <= 0 || h <= 0) return null;
-
-    const centerX = imageSize.width / 2;
-    const centerY = imageSize.height / 2;
-
-    // Calibration line
-    let calibrationLine = null;
-    if (calibration.points.length === 2) {
-      calibrationLine = (
-        <line
-          x1={calibration.points[0].x}
-          y1={calibration.points[0].y}
-          x2={calibration.points[1].x}
-          y2={calibration.points[1].y}
-          stroke="blue"
-          strokeWidth={2}
-        />
-      );
-    }
-
-    let tilesContent = null;
-
-    if (pattern === "grid") {
-      // --- Simple rectangular grid layout ---
-      const stepX = w + grout;
-      const stepY = h + grout;
-
-      const cols = Math.ceil(imageSize.width / stepX) + 2;
-      const rows = Math.ceil(imageSize.height / stepY) + 2;
-
-      const rects = [];
-
-      for (let row = -1; row < rows; row++) {
-        for (let col = -1; col < cols; col++) {
-          const x = col * stepX + grout / 2;
-          const y = row * stepY + grout / 2;
-
-          rects.push(
-            <rect
-              key={`grid-${row}-${col}`}
-              x={x}
-              y={y}
-              width={w}
-              height={h}
-              fill="none"
-              stroke="red"
-              strokeWidth={grout > 1 ? grout : 1}
-              opacity={0.5}
-            />
-          );
-        }
-      }
-
-      tilesContent = rects;
-    } else {
-      // --- Herringbone layout (ёлочка) via polygons ---
-      const step = w + h + grout;
-      const cols = Math.ceil(imageSize.width / step) + 2;
-      const rows = Math.ceil(imageSize.height / step) + 2;
-
-      const tiles = [];
-
-      for (let row = -1; row < rows; row++) {
-        for (let col = -1; col < cols; col++) {
-          const baseX = col * step;
-          const baseY = row * step;
-
-          const isEven = (row + col) % 2 === 0;
-
-          // Tile center
-          const cx = baseX + step / 2;
-          const cy = baseY + step / 2;
-
-          // Axis-aligned rectangle points around center
-          const x0 = cx - w / 2 + grout / 2;
-          const y0 = cy - h / 2 + grout / 2;
-          const x1 = cx + w / 2 - grout / 2;
-          const y1 = cy + h / 2 - grout / 2;
-
-          const points = `${x0},${y0} ${x1},${y0} ${x1},${y1} ${x0},${y1}`;
-
-          const tileRotation = isEven ? 90 : 0; // classical herringbone
-
-          tiles.push(
-            <g key={`h-${row}-${col}`} transform={`rotate(${tileRotation}, ${cx}, ${cy})`}>
-              <polygon points={points} fill="none" stroke="red" strokeWidth={grout > 1 ? grout : 1} opacity={0.5} />
-            </g>
-          );
-        }
-      }
-
-      tilesContent = tiles;
-    }
-
-    return (
-      <>
-        {calibrationLine}
-        <g transform={`rotate(${rotationDeg}, ${centerX}, ${centerY})`}>{tilesContent}</g>
-      </>
-    );
-  };
-
-  // Export current SVG (plan + tiles) to PNG
+  // === Export PNG ===
   const handleExportPng = () => {
     if (!svgRef.current || !imageSize) return;
 
@@ -282,9 +176,8 @@ export default function PlanCanvas({
     img.src = url;
   };
 
-  // Simple PDF export strategy: open PNG in new tab and user can "Save as PDF" via browser print
+  // === Export "PDF" через печать PNG ===
   const handleExportPdf = () => {
-    // Reuse PNG export, but open resulting PNG in new tab
     if (!svgRef.current || !imageSize) return;
 
     const svg = svgRef.current;
@@ -318,7 +211,6 @@ export default function PlanCanvas({
         `<html><head><title>Plan Export</title></head><body style="margin:0"><img src="${pngUrl}" style="width:100%;height:auto"/></body></html>`
       );
       win.document.close();
-      // дальше пользователь может через Ctrl+P сохранить как PDF
     };
     img.src = url;
   };
@@ -333,42 +225,26 @@ export default function PlanCanvas({
 
       {imageSrc && (
         <>
-          {/* Hidden image to detect natural size */}
+          {/* скрытое изображение для получения naturalWidth/naturalHeight */}
           {!imageSize && <img ref={hiddenImgRef} src={imageSrc} alt="hidden" style={{ display: "none" }} onLoad={handleHiddenImageLoad} />}
 
-          <div
-            ref={containerRef}
+          <PlanSvg
+            imageSrc={imageSrc}
+            imageSize={imageSize}
+            zoom={zoom}
+            offset={offset}
+            containerRef={containerRef}
+            svgRef={svgRef}
+            pxPerMm={pxPerMm}
+            tileSettings={tileSettings}
+            calibration={calibration}
+            isPanning={isPanning}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
-            onMouseUp={stopPanning}
-            onMouseLeave={stopPanning}
-            onClick={handleClickForCalibration}
-            style={{
-              position: "relative",
-              flex: 1,
-              border: "1px solid #ccc",
-              overflow: "hidden",
-              cursor: calibration.isCalibrating ? "crosshair" : isPanning ? "grabbing" : "grab",
-              minHeight: 300,
-            }}
-          >
-            {imageSize && (
-              <div
-                style={{
-                  position: "absolute",
-                  left: offset.x,
-                  top: offset.y,
-                  transform: `scale(${zoom})`,
-                  transformOrigin: "top left",
-                }}
-              >
-                <svg ref={svgRef} width={imageSize.width} height={imageSize.height}>
-                  <image href={imageSrc} x="0" y="0" width={imageSize.width} height={imageSize.height} />
-                  {renderTiles()}
-                </svg>
-              </div>
-            )}
-          </div>
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            onClick={handleCanvasClick}
+          />
 
           <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
             <button onClick={handleExportPng}>Экспорт PNG</button>

@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 import Sidebar from "./components/Sidebar";
-import PlanCanvas from "./components/PlanCanvas";
+import PlanCanvas from "./components/PlanCanvas/PlanCanvas";
 
 const STORAGE_KEY = "tileToolSettings_v1";
 
