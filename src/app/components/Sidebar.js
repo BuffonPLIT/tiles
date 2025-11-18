@@ -128,6 +128,29 @@ function Sidebar({
           <label>
             Цвет шва: <input type="color" value={localSettings.groutColor} onChange={(e) => update("groutColor", e.target.value)} />
           </label>
+
+          {/* NEW: border visibility depends on grout thickness */}
+          {(() => {
+            const groutValue = localSettings.groutMm ?? 0;
+            const canToggleBorder = groutValue <= 0;
+            const effectiveShowTileBorder = canToggleBorder ? localSettings.showTileBorder : false;
+
+            return (
+              <label style={{ marginTop: 8, opacity: canToggleBorder ? 1 : 0.5 }}>
+                <input
+                  type="checkbox"
+                  checked={effectiveShowTileBorder}
+                  disabled={!canToggleBorder}
+                  onChange={(e) => {
+                    if (!canToggleBorder) return;
+                    update("showTileBorder", e.target.checked);
+                  }}
+                />{" "}
+                Показывать границы плитки
+                {!canToggleBorder && <span style={{ marginLeft: 4, fontSize: 11, color: "#888" }}>(доступно только при шве 0 мм)</span>}
+              </label>
+            );
+          })()}
         </div>
       </section>
 

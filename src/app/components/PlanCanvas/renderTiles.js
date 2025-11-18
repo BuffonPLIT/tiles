@@ -18,13 +18,18 @@ export function renderTiles({ imageSize, imageSrc, pxPerMm, tileSettings, calibr
     tileOpacity,
     patternOffsetMmX,
     patternOffsetMmY,
+    showTileBorder,
   } = tileSettings;
 
   const groutPx = groutMm * pxPerMm;
+
   if (tileWidthMm <= 0 || tileLengthMm <= 0 || groutPx < 0) return null;
 
   const centerX = imageSize.width / 2;
   const centerY = imageSize.height / 2;
+
+  // border is allowed only when grout is exactly 0
+  const effectiveShowTileBorder = groutMm <= 0 && !!showTileBorder;
 
   let calibrationLine = null;
   if (calibration.points && calibration.points.length === 2) {
@@ -56,6 +61,7 @@ export function renderTiles({ imageSize, imageSrc, pxPerMm, tileSettings, calibr
       tileOpacity,
       patternOffsetMmX,
       patternOffsetMmY,
+      showTileBorder: effectiveShowTileBorder,
     });
   } else {
     tilesContent = renderHerringboneLines({
@@ -70,6 +76,7 @@ export function renderTiles({ imageSize, imageSrc, pxPerMm, tileSettings, calibr
       tileOpacity,
       patternOffsetMmX,
       patternOffsetMmY,
+      showTileBorder: effectiveShowTileBorder,
     });
   }
 

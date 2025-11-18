@@ -6,12 +6,12 @@ export function renderHerringboneLines({
   tileWidthMm,
   tileLengthMm,
   groutPx,
-  groutColor, // not used for lines anymore
   tileFillColor,
   tileBorderColor,
   tileOpacity,
   patternOffsetMmX,
   patternOffsetMmY,
+  showTileBorder, // NEW: controls border visibility
 }) {
   if (!imageSize || !pxPerMm) return null;
 
@@ -22,13 +22,18 @@ export function renderHerringboneLines({
     return null;
   }
 
-  // Distance between parallel joint lines (before global rotation):
-  // projected tile width + projected grout width
-  const lineSpacingX = widthPx / Math.SQRT2 + groutPx / Math.SQRT2;
+  // ----------------------------------------------------
+  // Distance between guiding lines:
+  //   projected tile width + projected grout width
+  //   BUT grout projected is groutPx * sqrt(2)
+  // ----------------------------------------------------
+  const lineSpacingX = widthPx / Math.SQRT2 + groutPx * Math.SQRT2;
   if (!Number.isFinite(lineSpacingX) || lineSpacingX <= 0) return null;
 
+  // ----------------------------------------------------
   // Distance between tile centers along a single line:
   // (tile length + grout width) * sqrt(2)
+  // ----------------------------------------------------
   const centerStepY = (lengthPx + groutPx) * Math.SQRT2;
   if (!Number.isFinite(centerStepY) || centerStepY <= 0) return null;
 
@@ -37,9 +42,8 @@ export function renderHerringboneLines({
 
   const margin = Math.max(imageSize.width, imageSize.height) * 2;
 
-  // Line thickness is always 1 px
+  // Always 1 px for visibility
   const groutStrokeWidth = 1;
-  // Lines are always red
   const groutStrokeColor = "red";
 
   const tileStrokeColor = tileBorderColor ?? "yellow";
@@ -54,7 +58,7 @@ export function renderHerringboneLines({
   for (let x = -margin; x <= imageSize.width + margin; x += lineSpacingX) {
     const xPos = x + offsetX;
 
-    // Guiding joint line (will become diagonal after outer rotate)
+    // Guiding red line
     lines.push(
       <line
         key={`hb-line-${lineIndex}`}
@@ -68,19 +72,18 @@ export function renderHerringboneLines({
       />
     );
 
-    // Odd lines → 45°, even lines → 135°
     const isOddLine = lineIndex % 2 === 1;
     const tileAngle = isOddLine ? 45 : 135;
 
-    // Phase shift on even lines: move centers up by half-step
+    // Even lines have half-step Y phase shift
     const phaseY = isOddLine ? 0 : -centerStepY / 2;
 
     let tileIndex = 0;
 
-    // Tile centers along this line
+    // Tile centers along this guiding line
     for (let y = -margin; y <= imageSize.height + margin; y += centerStepY) {
       const cy = y + offsetY + phaseY;
-      const cx = xPos; // center lies on guiding line
+      const cx = xPos;
 
       const tileX = cx - widthPx / 2;
       const tileY = cy - lengthPx / 2;
@@ -94,8 +97,8 @@ export function renderHerringboneLines({
           height={lengthPx}
           fill={fillColor}
           fillOpacity={tileOpacity ?? 1}
-          stroke={tileStrokeColor}
-          strokeWidth={tileStrokeWidth}
+          stroke={showTileBorder ? tileStrokeColor : "transparent"}
+          strokeWidth={showTileBorder ? tileStrokeWidth : 0}
           transform={`rotate(${tileAngle}, ${cx}, ${cy})`}
         />
       );

@@ -21,6 +21,7 @@ const defaultSettings = {
     rowOffsetMm: 0,
     patternOffsetMmX: 0,
     patternOffsetMmY: 0,
+    showTileBorder: true,
   },
 
   view: {
