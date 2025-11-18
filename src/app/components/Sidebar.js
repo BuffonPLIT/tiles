@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 function Sidebar({
   tileSettings,
@@ -9,11 +9,25 @@ function Sidebar({
   onChangeKnownDistance,
   onStartCalibration,
   pxPerMm,
-  stats,
 }) {
-  const handleChangeNumber = (updater) => (e) => {
-    const value = Number(e.target.value);
-    updater(Number.isFinite(value) ? value : 0);
+  // ⭐ Локальное состояние вместо прямых вызовов onTileSettingsChange
+  const [localSettings, setLocalSettings] = useState(tileSettings);
+
+  // 🔥 Debounce: применяем изменения только спустя 700 мс тишины
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onTileSettingsChange(localSettings);
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, [localSettings, onTileSettingsChange]);
+
+  // обновление полей
+  const update = (field, value) => {
+    setLocalSettings((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   return (
@@ -21,95 +35,61 @@ function Sidebar({
       <section>
         <h3>Параметры плитки</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          {/* уже существующие поля */}
           <label>
             Длина плитки (мм):{" "}
             <input
               type="number"
-              value={tileSettings.tileWidthMm ?? ""}
-              onChange={(e) =>
-                onTileSettingsChange({
-                  ...tileSettings,
-                  tileWidthMm: e.target.value === "" ? 0 : Number(e.target.value),
-                })
-              }
+              value={localSettings.tileWidthMm ?? ""}
+              onChange={(e) => update("tileWidthMm", e.target.value === "" ? 0 : Number(e.target.value))}
             />
           </label>
+
           <label>
             Ширина плитки (мм):{" "}
             <input
               type="number"
-              value={tileSettings.tileLengthMm ?? ""}
-              onChange={(e) =>
-                onTileSettingsChange({
-                  ...tileSettings,
-                  tileLengthMm: e.target.value === "" ? 0 : Number(e.target.value),
-                })
-              }
+              value={localSettings.tileLengthMm ?? ""}
+              onChange={(e) => update("tileLengthMm", e.target.value === "" ? 0 : Number(e.target.value))}
             />
           </label>
+
           <label>
             Толщина шва (мм):{" "}
             <input
               type="number"
-              value={tileSettings.groutMm ?? ""}
-              onChange={(e) =>
-                onTileSettingsChange({
-                  ...tileSettings,
-                  groutMm: e.target.value === "" ? 0 : Number(e.target.value),
-                })
-              }
+              value={localSettings.groutMm ?? ""}
+              onChange={(e) => update("groutMm", e.target.value === "" ? 0 : Number(e.target.value))}
             />
           </label>
 
-          {/* NEW: сдвиг ряда */}
           <label>
             Сдвиг ряда (мм):{" "}
             <input
               type="number"
-              value={tileSettings.rowOffsetMm ?? ""}
-              onChange={(e) =>
-                onTileSettingsChange({
-                  ...tileSettings,
-                  rowOffsetMm: e.target.value === "" ? 0 : Number(e.target.value),
-                })
-              }
+              value={localSettings.rowOffsetMm ?? ""}
+              onChange={(e) => update("rowOffsetMm", e.target.value === "" ? 0 : Number(e.target.value))}
             />
           </label>
 
           <label style={{ marginTop: 8 }}>
             <input
               type="checkbox"
-              checked={tileSettings.pattern === "herringbone"}
-              onChange={(e) =>
-                onTileSettingsChange({
-                  ...tileSettings,
-                  pattern: e.target.checked ? "herringbone" : "grid",
-                })
-              }
+              checked={localSettings.pattern === "herringbone"}
+              onChange={(e) => update("pattern", e.target.checked ? "herringbone" : "grid")}
             />{" "}
             Укладка ёлочкой (herringbone)
           </label>
         </div>
       </section>
 
-      {/* NEW: цвета */}
       <section>
         <h3>Цвета</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <label>
             Цвет плитки:{" "}
-            <input
-              type="color"
-              value={tileSettings.tileFillColor}
-              onChange={(e) =>
-                onTileSettingsChange({
-                  ...tileSettings,
-                  tileFillColor: e.target.value,
-                })
-              }
-            />
+            <input type="color" value={localSettings.tileFillColor} onChange={(e) => update("tileFillColor", e.target.value)} />
           </label>
+
           <label>
             Прозрачность плитки:{" "}
             <input
@@ -117,44 +97,23 @@ function Sidebar({
               min="0"
               max="1"
               step="0.05"
-              value={tileSettings.tileOpacity ?? 1}
-              onChange={(e) =>
-                onTileSettingsChange({
-                  ...tileSettings,
-                  tileOpacity: Number(e.target.value),
-                })
-              }
+              value={localSettings.tileOpacity ?? 1}
+              onChange={(e) => update("tileOpacity", Number(e.target.value))}
             />
-            {Math.round((tileSettings.tileOpacity ?? 1) * 100)}%
+            {Math.round((localSettings.tileOpacity ?? 1) * 100)}%
           </label>
+
           <label>
             Цвет границы плитки:{" "}
-            <input
-              type="color"
-              value={tileSettings.tileBorderColor}
-              onChange={(e) =>
-                onTileSettingsChange({
-                  ...tileSettings,
-                  tileBorderColor: e.target.value,
-                })
-              }
-            />
+            <input type="color" value={localSettings.tileBorderColor} onChange={(e) => update("tileBorderColor", e.target.value)} />
           </label>
+
           <label>
-            Цвет шва:{" "}
-            <input
-              type="color"
-              value={tileSettings.groutColor}
-              onChange={(e) =>
-                onTileSettingsChange({
-                  ...tileSettings,
-                  groutColor: e.target.value,
-                })
-              }
-            />
+            Цвет шва: <input type="color" value={localSettings.groutColor} onChange={(e) => update("groutColor", e.target.value)} />
           </label>
         </div>
       </section>
+
       <section>
         <h3>Смещение сетки</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -162,28 +121,20 @@ function Sidebar({
             Смещение по X (мм):{" "}
             <input
               type="number"
-              value={tileSettings.patternOffsetMmX ?? 0}
-              onChange={(e) =>
-                onTileSettingsChange({
-                  ...tileSettings,
-                  patternOffsetMmX: e.target.value === "" ? 0 : Number(e.target.value),
-                })
-              }
+              value={localSettings.patternOffsetMmX ?? 0}
+              onChange={(e) => update("patternOffsetMmX", e.target.value === "" ? 0 : Number(e.target.value))}
             />
           </label>
+
           <label>
             Смещение по Y (мм):{" "}
             <input
               type="number"
-              value={tileSettings.patternOffsetMmY ?? 0}
-              onChange={(e) =>
-                onTileSettingsChange({
-                  ...tileSettings,
-                  patternOffsetMmY: e.target.value === "" ? 0 : Number(e.target.value),
-                })
-              }
+              value={localSettings.patternOffsetMmY ?? 0}
+              onChange={(e) => update("patternOffsetMmY", e.target.value === "" ? 0 : Number(e.target.value))}
             />
           </label>
+
           <small style={{ color: "#666" }}>Положительное X — вправо, положительное Y — вниз.</small>
         </div>
       </section>
@@ -192,16 +143,7 @@ function Sidebar({
         <h3>Поворот сетки</h3>
         <label>
           Угол (°):{" "}
-          <input
-            type="number"
-            value={tileSettings.rotationDeg}
-            onChange={(e) =>
-              onTileSettingsChange({
-                ...tileSettings,
-                rotationDeg: Number(e.target.value) || 0,
-              })
-            }
-          />
+          <input type="number" value={localSettings.rotationDeg} onChange={(e) => update("rotationDeg", Number(e.target.value) || 0)} />
         </label>
       </section>
 
@@ -220,36 +162,14 @@ function Sidebar({
             Известное расстояние (мм):{" "}
             <input type="number" value={calibration.knownDistanceMm} onChange={(e) => onChangeKnownDistance(Number(e.target.value) || 0)} />
           </label>
+
           <button onClick={onStartCalibration}>
             {calibration.isCalibrating ? "Кликните по двум точкам на плане..." : "Начать калибровку"}
           </button>
-          <small>
-            1. Введите реальное расстояние (мм), например между стенами. <br />
-            2. Нажмите «Начать калибровку». <br />
-            3. Кликните по двум точкам на плане.
-          </small>
-          <div style={{ marginTop: 4, fontSize: 12 }}>Текущий масштаб: {pxPerMm ? `${pxPerMm.toFixed(3)} px / мм` : "не откалиброван"}</div>
         </div>
-      </section>
 
-      {/* <section>
-        <h3>Расход плитки (приблизительно)</h3>
-        {stats ? (
-          <div style={{ fontSize: 14 }}>
-            <div>
-              Площадь плана: {stats.areaM2.toFixed(2)} м<sup>2</sup>
-            </div>
-            <div>
-              Площадь 1 плитки: {stats.tileAreaM2.toFixed(3)} м<sup>2</sup>
-            </div>
-            <div>Теоретическое количество плиток: {stats.rawCount.toFixed(1)}</div>
-            <div>Округлённо (цельные): {stats.fullTiles} шт.</div>
-            <div>С запасом (~10%): {stats.reserveTiles} шт.</div>
-          </div>
-        ) : (
-          <p style={{ fontSize: 13 }}>Для расчёта нужно: загрузить план и выполнить калибровку масштаба.</p>
-        )}
-      </section> */}
+        <div style={{ marginTop: 4, fontSize: 12 }}>Текущий масштаб: {pxPerMm ? `${pxPerMm.toFixed(3)} px / мм` : "не откалиброван"}</div>
+      </section>
     </>
   );
 }
