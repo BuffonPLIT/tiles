@@ -62,6 +62,31 @@ function Sidebar({
   const txtRowOffset = isClient ? t("row_offset_mm") : "Сдвиг ряда (мм)";
   const txtHerringbone = isClient ? t("herringbone") : "Укладка ёлочкой";
 
+  // новые ключи для остальных текстов
+  const txtColors = isClient ? t("colors") : "Цвета";
+  const txtTileColor = isClient ? t("tile_color") : "Цвет плитки";
+  const txtOpacity = isClient ? t("opacity") : "Прозрачность";
+  const txtBorderColor = isClient ? t("border_color") : "Цвет границы";
+  const txtGroutColor = isClient ? t("grout_color") : "Цвет шва";
+  const txtShowBorder = isClient ? t("show_tile_border") : "Показывать границы плитки";
+  const txtOnlyZero = isClient ? t("only_with_zero_grout") : "(доступно только при шве 0 мм)";
+
+  const txtOffsetAndRotation = isClient ? t("offset_and_rotation") : "Смещение и поворот";
+  const txtOffsetX = isClient ? t("offset_x") : "Смещение X (мм)";
+  const txtOffsetY = isClient ? t("offset_y") : "Смещение Y (мм)";
+  const txtRotationDeg = isClient ? t("rotation_deg") : "Поворот (°)";
+  const txtOffsetHint = isClient ? t("offset_hint") : "Положительное X — вправо, положительное Y — вниз.";
+
+  const txtZoom = isClient ? t("zoom") : "Масштаб (Zoom)";
+  const txtCenter = isClient ? t("center") : "Центрировать";
+
+  const txtCalibration = isClient ? t("calibration") : "Калибровка";
+  const txtKnownDistance = isClient ? t("known_distance_mm") : "Известное расстояние (мм)";
+  const txtStartCalibration = isClient ? t("start_calibration") : "Начать калибровку";
+  const txtClickTwoPoints = isClient ? t("click_two_points") : "Кликните по двум точкам на плане...";
+  const txtCurrentScale = isClient ? t("current_scale") : "Текущий масштаб";
+  const txtNotCalibrated = isClient ? t("not_calibrated") : "не откалиброван";
+
   return (
     <>
       {/* Geometry popup */}
@@ -119,15 +144,15 @@ function Sidebar({
       {/*            COLORS             */}
       {/* ============================= */}
       <section>
-        <h3>Цвета</h3>
+        <h3>{txtColors}</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label>
-            Цвет плитки:{" "}
+            {txtTileColor}:{" "}
             <input type="color" value={localSettings.tileFillColor} onChange={(e) => update("tileFillColor", e.target.value)} />
           </label>
 
           <label>
-            Прозрачность:{" "}
+            {txtOpacity}:{" "}
             <input
               type="range"
               min="0"
@@ -140,12 +165,12 @@ function Sidebar({
           </label>
 
           <label>
-            Цвет границы:{" "}
+            {txtBorderColor}:{" "}
             <input type="color" value={localSettings.tileBorderColor} onChange={(e) => update("tileBorderColor", e.target.value)} />
           </label>
 
           <label>
-            Цвет шва: <input type="color" value={localSettings.groutColor} onChange={(e) => update("groutColor", e.target.value)} />
+            {txtGroutColor}: <input type="color" value={localSettings.groutColor} onChange={(e) => update("groutColor", e.target.value)} />
           </label>
 
           {(() => {
@@ -164,8 +189,8 @@ function Sidebar({
                     update("showTileBorder", e.target.checked);
                   }}
                 />{" "}
-                Показывать границы плитки
-                {!canToggleBorder && <span style={{ marginLeft: 4, fontSize: 11, color: "#888" }}>(доступно только при шве 0 мм)</span>}
+                {txtShowBorder}
+                {!canToggleBorder && <span style={{ marginLeft: 4, fontSize: 11, color: "#888" }}>{txtOnlyZero}</span>}
               </label>
             );
           })()}
@@ -176,10 +201,10 @@ function Sidebar({
       {/*         OFFSET & ROTATION     */}
       {/* ============================= */}
       <section>
-        <h3>Смещение и поворот</h3>
+        <h3>{txtOffsetAndRotation}</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label>
-            Смещение X (мм):{" "}
+            {txtOffsetX}:{" "}
             <input
               type="number"
               value={localSettings.patternOffsetMmX ?? 0}
@@ -188,7 +213,7 @@ function Sidebar({
           </label>
 
           <label>
-            Смещение Y (мм):{" "}
+            {txtOffsetY}:{" "}
             <input
               type="number"
               value={localSettings.patternOffsetMmY ?? 0}
@@ -197,11 +222,11 @@ function Sidebar({
           </label>
 
           <label>
-            Поворот (°):{" "}
+            {txtRotationDeg}:{" "}
             <input type="number" value={localSettings.rotationDeg} onChange={(e) => update("rotationDeg", Number(e.target.value) || 0)} />
           </label>
 
-          <small style={{ color: "#666" }}>Положительное X — вправо, положительное Y — вниз.</small>
+          <small style={{ color: "#666" }}>{txtOffsetHint}</small>
         </div>
       </section>
 
@@ -209,7 +234,7 @@ function Sidebar({
       {/*             ZOOM              */}
       {/* ============================= */}
       <section>
-        <h3>Масштаб (Zoom)</h3>
+        <h3>{txtZoom}</h3>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <input type="range" min={0.25} max={10} step={0.05} value={zoom} onChange={(e) => onZoomChange(Number(e.target.value))} />
@@ -227,7 +252,7 @@ function Sidebar({
               background: "#f2f2f2",
             }}
           >
-            Центрировать
+            {txtCenter}
           </button>
         </div>
       </section>
@@ -236,18 +261,18 @@ function Sidebar({
       {/*         CALIBRATION          */}
       {/* ============================= */}
       <section>
-        <h3>Калибровка</h3>
+        <h3>{txtCalibration}</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label>
-            Известное расстояние (мм):{" "}
+            {txtKnownDistance}:{" "}
             <input type="number" value={calibration.knownDistanceMm} onChange={(e) => onChangeKnownDistance(Number(e.target.value) || 0)} />
           </label>
 
-          <button onClick={onStartCalibration}>
-            {calibration.isCalibrating ? "Кликните по двум точкам на плане..." : "Начать калибровку"}
-          </button>
+          <button onClick={onStartCalibration}>{calibration.isCalibrating ? txtClickTwoPoints : txtStartCalibration}</button>
 
-          <div style={{ marginTop: 4, fontSize: 12 }}>Текущий масштаб: {pxPerMm ? `${pxPerMm.toFixed(3)} px / мм` : "не откалиброван"}</div>
+          <div style={{ marginTop: 4, fontSize: 12 }}>
+            {txtCurrentScale}: {pxPerMm ? `${pxPerMm.toFixed(3)} px / мм` : txtNotCalibrated}
+          </div>
         </div>
       </section>
     </>

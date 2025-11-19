@@ -4,5 +4,37 @@
   "current_dimensions": "Aktualne wymiary",
   "grout_mm": "Fuga (mm)",
   "row_offset_mm": "Przesunięcie rzędu (mm)",
-  "herringbone": "Układanie w jodełkę"
+  "herringbone": "Układanie w jodełkę",
+
+  "colors": "Kolory",
+  "tile_color": "Kolor płytki",
+  "opacity": "Przezroczystość",
+  "border_color": "Kolor obramowania",
+  "grout_color": "Kolor fugi",
+  "show_tile_border": "Pokaż obramowanie płytki",
+  "only_with_zero_grout": "(dostępne tylko przy fudze 0 mm)",
+
+  "offset_and_rotation": "Przesunięcie i obrót",
+  "offset_x": "Przesunięcie X (mm)",
+  "offset_y": "Przesunięcie Y (mm)",
+  "rotation_deg": "Obrót (°)",
+
+  "zoom": "Zoom",
+  "center": "Wycentruj",
+
+  "calibration": "Kalibracja",
+  "known_distance_mm": "Znana odległość (mm)",
+  "start_calibration": "Rozpocznij kalibrację",
+  "click_two_points": "Kliknij dwie punkty na planie…",
+  "current_scale": "Aktualna skala",
+  "not_calibrated": "nie skalibrowano",
+  "tile_width_mm": "Długość płytki (mm)",
+  "tile_length_mm": "Szerokość płytki (mm)",
+  "save": "Zapisz",
+  "cancel": "Anuluj",
+
+  "upload_plan": "Załaduj plan mieszkania, aby rozpocząć pracę.",
+  "export_png": "Eksport PNG",
+  "export_pdf": "Eksport PDF (przez druk)",
+  "file_upload": "Wgraj plik planu"
 }

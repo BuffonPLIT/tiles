@@ -4,5 +4,37 @@
   "current_dimensions": "Актуальныя памеры",
   "grout_mm": "Баразёнка (мм)",
   "row_offset_mm": "Зрушыць шэраг (мм)",
-  "herringbone": "Кладка ялінкай"
+  "herringbone": "Кладка ялінкай",
+
+  "colors": "Колеры",
+  "tile_color": "Колер пліткі",
+  "opacity": "Празрыстасць",
+  "border_color": "Колер мяжы",
+  "grout_color": "Колер баразёнкі",
+  "show_tile_border": "Паказваць межы пліткі",
+  "only_with_zero_grout": "(даступна толькі пры баразёнцы 0 мм)",
+
+  "offset_and_rotation": "Зрух і паварот",
+  "offset_x": "Зрух X (мм)",
+  "offset_y": "Зрух Y (мм)",
+  "rotation_deg": "Паварот (°)",
+
+  "zoom": "Маштаб",
+  "center": "Цэнтраваць",
+
+  "calibration": "Каліброўка",
+  "known_distance_mm": "Вядомая адлегласць (мм)",
+  "start_calibration": "Пачаць каліброўку",
+  "click_two_points": "Націсніце па двух кропках на плане…",
+  "current_scale": "Бягучы маштаб",
+  "not_calibrated": "не адкалібравана",
+  "tile_width_mm": "Даўжыня пліткі (мм)",
+  "tile_length_mm": "Шырыня пліткі (мм)",
+  "save": "Захаваць",
+  "cancel": "Адмена",
+
+  "upload_plan": "Загрузіце план кватэры, каб пачаць працу.",
+  "export_png": "Экспарт PNG",
+  "export_pdf": "Экспарт PDF (праз друк)",
+  "file_upload": "Загрузіць файл плана"
 }

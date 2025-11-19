@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function PopupGeometryModal({
   open,
@@ -8,6 +9,7 @@ export default function PopupGeometryModal({
   initialValues, // { tileWidthMm, tileLengthMm, groutMm }
   onSave,
 }) {
+  const { t } = useTranslation();
   const [values, setValues] = useState(initialValues);
 
   useEffect(() => {
@@ -48,20 +50,20 @@ export default function PopupGeometryModal({
           gap: 12,
         }}
       >
-        <h3 style={{ margin: 0 }}>Геометрия плитки</h3>
+        <h3 style={{ margin: 0 }}>{t("tile_geometry")}</h3>
 
         <label>
-          Длина плитки (мм):{" "}
+          {t("tile_width_mm")}:{" "}
           <input type="number" value={values.tileWidthMm} onChange={(e) => update("tileWidthMm", Number(e.target.value) || 0)} />
         </label>
 
         <label>
-          Ширина плитки (мм):{" "}
+          {t("tile_length_mm")}:{" "}
           <input type="number" value={values.tileLengthMm} onChange={(e) => update("tileLengthMm", Number(e.target.value) || 0)} />
         </label>
 
         <label>
-          Толщина шва (мм): <input type="number" value={values.groutMm} onChange={(e) => update("groutMm", Number(e.target.value) || 0)} />
+          {t("grout_mm")}: <input type="number" value={values.groutMm} onChange={(e) => update("groutMm", Number(e.target.value) || 0)} />
         </label>
 
         <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
@@ -72,11 +74,11 @@ export default function PopupGeometryModal({
               onClose();
             }}
           >
-            Сохранить
+            {t("save")}
           </button>
 
           <button style={{ flex: 1, padding: "8px 0" }} onClick={onClose}>
-            Отмена
+            {t("cancel")}
           </button>
         </div>
       </div>

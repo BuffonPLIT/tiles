@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import PlanSvg from "./PlanSvg";
 
 export default function PlanCanvas({
@@ -18,14 +19,18 @@ export default function PlanCanvas({
   calibration,
   setCalibration,
 }) {
+  const { t } = useTranslation();
+  const [isClient, setIsClient] = useState(false);
+
+  React.useEffect(() => setIsClient(true), []);
+
   const containerRef = useRef(null);
   const svgRef = useRef(null);
   const hiddenImgRef = useRef(null);
 
   const [isPanning, setIsPanning] = useState(false);
-  const [panStart, setPanStart] = useState(null); // {mouseX, mouseY, offsetX, offsetY}
+  const [panStart, setPanStart] = useState(null);
 
-  // ⚡ refs для rAF-оптимизации pan
   const panFrameRef = useRef(null);
   const nextOffsetRef = useRef(offset);
 
@@ -53,7 +58,7 @@ export default function PlanCanvas({
     reader.readAsDataURL(file);
   };
 
-  // === Hidden image natural size ===
+  // Hidden image size
   const handleHiddenImageLoad = (e) => {
     const img = e.currentTarget;
     setImageSize({
@@ -66,7 +71,7 @@ export default function PlanCanvas({
   const handleMouseDown = (e) => {
     if (!imageSrc) return;
     if (calibration.isCalibrating) return;
-    if (e.button !== 0) return; // only left button
+    if (e.button !== 0) return;
 
     setIsPanning(true);
     setPanStart({
@@ -76,7 +81,6 @@ export default function PlanCanvas({
       offsetY: offset.y,
     });
 
-    // ⚡ сбрасываем "следующий" offset на текущий
     nextOffsetRef.current = offset;
   };
 
@@ -86,15 +90,11 @@ export default function PlanCanvas({
     const dx = e.clientX - panStart.mouseX;
     const dy = e.clientY - panStart.mouseY;
 
-    const newOffset = {
+    nextOffsetRef.current = {
       x: panStart.offsetX + dx,
       y: panStart.offsetY + dy,
     };
 
-    // ⚡ только сохраняем offset, без немедленного setOffset
-    nextOffsetRef.current = newOffset;
-
-    // ⚡ один setOffset на кадр через requestAnimationFrame
     if (panFrameRef.current === null) {
       panFrameRef.current = window.requestAnimationFrame(() => {
         setOffset(nextOffsetRef.current);
@@ -107,22 +107,16 @@ export default function PlanCanvas({
     setIsPanning(false);
     setPanStart(null);
 
-    // ⚡ отменяем запланированный кадр, если есть
     if (panFrameRef.current !== null) {
       window.cancelAnimationFrame(panFrameRef.current);
       panFrameRef.current = null;
     }
   };
 
-  const handleMouseUp = () => {
-    stopPanning();
-  };
+  const handleMouseUp = stopPanning;
+  const handleMouseLeave = stopPanning;
 
-  const handleMouseLeave = () => {
-    stopPanning();
-  };
-
-  // === Calibration click on SVG ===
+  // === Calibration click ===
   const handleCanvasClick = (e) => {
     if (!calibration.isCalibrating || !svgRef.current || !imageSize) return;
 
@@ -136,6 +130,7 @@ export default function PlanCanvas({
       const [p1, p2] = newPoints;
       const dx = p2.x - p1.x;
       const dy = p2.y - p1.y;
+
       const distPx = Math.sqrt(dx * dx + dy * dy);
 
       if (calibration.knownDistanceMm > 0) {
@@ -167,12 +162,9 @@ export default function PlanCanvas({
     if (!source.match(/^<svg[^>]+xmlns=/)) {
       source = source.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
     }
-
     source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
 
-    const svgBlob = new Blob([source], {
-      type: "image/svg+xml;charset=utf-8",
-    });
+    const svgBlob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(svgBlob);
 
     const img = new Image();
@@ -180,46 +172,39 @@ export default function PlanCanvas({
       const canvas = document.createElement("canvas");
       canvas.width = imageSize.width;
       canvas.height = imageSize.height;
+
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0);
       URL.revokeObjectURL(url);
 
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) return;
-          const pngUrl = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = pngUrl;
-          link.download = "plan-tiles.png";
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(pngUrl);
-        },
-        "image/png",
-        1.0
-      );
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const pngUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = pngUrl;
+        link.download = "plan-tiles.png";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(pngUrl);
+      });
     };
     img.src = url;
   };
 
-  // === Export "PDF" через печать PNG ===
+  // === Export PDF via print ===
   const handleExportPdf = () => {
     if (!svgRef.current || !imageSize) return;
 
-    const svg = svgRef.current;
     const serializer = new XMLSerializer();
-    let source = serializer.serializeToString(svg);
+    let source = serializer.serializeToString(svgRef.current);
 
     if (!source.match(/^<svg[^>]+xmlns=/)) {
       source = source.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
     }
-
     source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
 
-    const svgBlob = new Blob([source], {
-      type: "image/svg+xml;charset=utf-8",
-    });
+    const svgBlob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(svgBlob);
 
     const img = new Image();
@@ -227,16 +212,16 @@ export default function PlanCanvas({
       const canvas = document.createElement("canvas");
       canvas.width = imageSize.width;
       canvas.height = imageSize.height;
+
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0);
       URL.revokeObjectURL(url);
 
       const pngUrl = canvas.toDataURL("image/png");
+
       const win = window.open();
       if (!win) return;
-      win.document.write(
-        `<html><head><title>Plan Export</title></head><body style="margin:0"><img src="${pngUrl}" style="width:100%;height:auto"/></body></html>`
-      );
+      win.document.write(`<html><body style="margin:0"><img src="${pngUrl}" style="width:100%"/></body></html>`);
       win.document.close();
     };
     img.src = url;
@@ -248,7 +233,7 @@ export default function PlanCanvas({
         <input type="file" accept="image/*" onChange={handleFileChange} />
       </div>
 
-      {!imageSrc && <p>Загрузите план квартиры, чтобы начать работу.</p>}
+      {!imageSrc && <p>{isClient ? t("upload_plan") : "Загрузите план квартиры, чтобы начать работу."}</p>}
 
       {imageSrc && (
         <>
@@ -273,8 +258,8 @@ export default function PlanCanvas({
           />
 
           <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-            <button onClick={handleExportPng}>Экспорт PNG</button>
-            <button onClick={handleExportPdf}>Экспорт PDF (через печать)</button>
+            <button onClick={handleExportPng}>{isClient ? t("export_png") : "Экспорт PNG"}</button>
+            <button onClick={handleExportPdf}>{isClient ? t("export_pdf") : "Экспорт PDF (через печать)"}</button>
           </div>
         </>
       )}
