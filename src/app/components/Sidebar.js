@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import PopupGeometryModal from "./PopupGeometryModal";
 
 function Sidebar({
@@ -14,6 +15,15 @@ function Sidebar({
   pxPerMm,
   onCenterView,
 }) {
+  const { t } = useTranslation();
+
+  // flag to avoid calling t() during SSR
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Local copy of settings to reduce renders (debounced sync)
   const [localSettings, setLocalSettings] = useState(tileSettings);
 
@@ -43,6 +53,14 @@ function Sidebar({
     }));
   };
 
+  // helpers to render translated / fallback text
+  const txtTileGeometry = isClient ? t("tile_geometry") : "Геометрия плитки";
+  const txtChangeGeometry = isClient ? t("change_geometry") : "Изменить геометрию…";
+  const txtCurrentDimensions = isClient ? t("current_dimensions") : "Текущие размеры";
+  const txtGroutMm = isClient ? t("grout_mm") : "Шов (мм)";
+  const txtRowOffset = isClient ? t("row_offset_mm") : "Сдвиг ряда (мм)";
+  const txtHerringbone = isClient ? t("herringbone") : "Укладка ёлочкой";
+
   return (
     <>
       {/* Geometry popup */}
@@ -67,17 +85,17 @@ function Sidebar({
       {/*      TILE GEOMETRY (POPUP)    */}
       {/* ============================= */}
       <section>
-        <h3>Геометрия плитки</h3>
+        <h3>{txtTileGeometry}</h3>
 
-        <button onClick={() => setGeoModalOpen(true)}>Изменить геометрию…</button>
+        <button onClick={() => setGeoModalOpen(true)}>{txtChangeGeometry}</button>
 
         <div style={{ marginTop: 6, fontSize: 12, color: "#666" }}>
-          Текущие размеры: {localSettings.tileWidthMm} × {localSettings.tileLengthMm} мм, шов {localSettings.groutMm} мм
+          {txtCurrentDimensions}: {localSettings.tileWidthMm} × {localSettings.tileLengthMm} мм, {txtGroutMm} {localSettings.groutMm}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
           <label>
-            Сдвиг ряда (мм):{" "}
+            {txtRowOffset}:{" "}
             <input
               type="number"
               value={localSettings.rowOffsetMm ?? ""}
@@ -91,7 +109,7 @@ function Sidebar({
               checked={localSettings.pattern === "herringbone"}
               onChange={(e) => update("pattern", e.target.checked ? "herringbone" : "grid")}
             />{" "}
-            Укладка ёлочкой (herringbone)
+            {txtHerringbone} (herringbone)
           </label>
         </div>
       </section>
@@ -129,7 +147,6 @@ function Sidebar({
             Цвет шва: <input type="color" value={localSettings.groutColor} onChange={(e) => update("groutColor", e.target.value)} />
           </label>
 
-          {/* NEW: border visibility depends on grout thickness */}
           {(() => {
             const groutValue = localSettings.groutMm ?? 0;
             const canToggleBorder = groutValue <= 0;

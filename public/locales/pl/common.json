@@ -1,0 +1,8 @@
+{
+  "tile_geometry": "Geometria płytki",
+  "change_geometry": "Zmień geometrię",
+  "current_dimensions": "Aktualne wymiary",
+  "grout_mm": "Fuga (mm)",
+  "row_offset_mm": "Przesunięcie rzędu (mm)",
+  "herringbone": "Układanie w jodełkę"
+}
