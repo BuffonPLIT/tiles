@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import PopupGeometryModal from "./PopupGeometryModal";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 function Sidebar({
   tileSettings,
@@ -80,7 +81,7 @@ function Sidebar({
           }));
         }}
       />
-
+      <LanguageSwitcher />
       {/* ============================= */}
       {/*      TILE GEOMETRY (POPUP)    */}
       {/* ============================= */}
