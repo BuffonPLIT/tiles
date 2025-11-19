@@ -44,7 +44,7 @@ export function renderHerringboneLines({
 
   // Always 1 px for visibility
   const groutStrokeWidth = 1;
-  const groutStrokeColor = "red";
+  const groutStrokeColor = "yellow"; // main guiding lines are yellow now
 
   const tileStrokeColor = tileBorderColor ?? "yellow";
   const fillColor = tileFillColor ?? "none";
@@ -58,7 +58,7 @@ export function renderHerringboneLines({
   for (let x = -margin; x <= imageSize.width + margin; x += lineSpacingX) {
     const xPos = x + offsetX;
 
-    // Guiding red line
+    // Guiding yellow line
     lines.push(
       <line
         key={`hb-line-${lineIndex}`}
@@ -68,6 +68,21 @@ export function renderHerringboneLines({
         y2={imageSize.height + margin + offsetY}
         stroke={groutStrokeColor}
         strokeWidth={groutStrokeWidth}
+        opacity={0.2}
+      />
+    );
+
+    // Extra red line in the middle between yellow ones (parallel)
+    const secondaryX = xPos + lineSpacingX / 2 - lengthPx / (2 * Math.SQRT2);
+    lines.push(
+      <line
+        key={`hb-line-red-${lineIndex}`}
+        x1={secondaryX}
+        y1={-margin + offsetY}
+        x2={secondaryX}
+        y2={imageSize.height + margin + offsetY}
+        stroke="red"
+        strokeWidth={groutPx / Math.SQRT2}
         opacity={0.8}
       />
     );
@@ -80,7 +95,7 @@ export function renderHerringboneLines({
 
     let tileIndex = 0;
 
-    // Tile centers along this guiding line
+    // Tile centers along this guiding (yellow) line
     for (let y = -margin; y <= imageSize.height + margin; y += centerStepY) {
       const cy = y + offsetY + phaseY;
       const cx = xPos;
