@@ -41,7 +41,15 @@ export function renderGrid({
   const stepX = widthPx + groutGapPx;
   const stepY = heightPx + groutGapPx;
 
-  const rowOffsetPx = (rowOffsetMm || 0) * pxPerMm;
+  // helper: correct modulo for negative values
+  const mod = (value, period) => {
+    if (!Number.isFinite(period) || period === 0) return 0;
+    const r = value % period;
+    return r < 0 ? r + period : r;
+  };
+
+  // raw per-row offset in px
+  const rawRowOffsetPx = (rowOffsetMm || 0) * pxPerMm;
 
   const patternOffsetX = (patternOffsetMmX || 0) * pxPerMm;
   const patternOffsetY = (patternOffsetMmY || 0) * pxPerMm;
@@ -73,7 +81,10 @@ export function renderGrid({
   // Rendering tiles and grout lines
   // -------------------------------------------------------
   for (let row = rowStart; row <= rowEnd; row++) {
-    const shiftX = row * rowOffsetPx;
+    // ✅ key idea:
+    // effective shift for row N:
+    //   shiftX = (N * rawRowOffsetPx) mod stepX
+    const shiftX = mod(row * rawRowOffsetPx, stepX);
 
     for (let col = colStart; col <= colEnd; col++) {
       const baseX = col * stepX + shiftX + patternOffsetX;
