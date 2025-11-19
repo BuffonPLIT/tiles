@@ -58,19 +58,19 @@ export function renderHerringboneLines({
   for (let x = -margin; x <= imageSize.width + margin; x += lineSpacingX) {
     const xPos = x + offsetX;
 
-    // Guiding yellow line
-    lines.push(
-      <line
-        key={`hb-line-${lineIndex}`}
-        x1={xPos}
-        y1={-margin + offsetY}
-        x2={xPos}
-        y2={imageSize.height + margin + offsetY}
-        stroke={groutStrokeColor}
-        strokeWidth={groutStrokeWidth}
-        opacity={0.2}
-      />
-    );
+    // // Guiding yellow line
+    // lines.push(
+    //   <line
+    //     key={`hb-line-${lineIndex}`}
+    //     x1={xPos}
+    //     y1={-margin + offsetY}
+    //     x2={xPos}
+    //     y2={imageSize.height + margin + offsetY}
+    //     stroke={groutStrokeColor}
+    //     strokeWidth={groutStrokeWidth}
+    //     opacity={0.2}
+    //   />
+    // );
 
     // Extra red line in the middle between yellow ones (parallel)
     const secondaryX = xPos + lineSpacingX / 2 - lengthPx / (2 * Math.SQRT2);
@@ -81,7 +81,7 @@ export function renderHerringboneLines({
         y1={-margin + offsetY}
         x2={secondaryX}
         y2={imageSize.height + margin + offsetY}
-        stroke="red"
+        stroke="#ff0000"
         strokeWidth={groutPx / Math.SQRT2}
         opacity={0.8}
       />
