@@ -5,6 +5,22 @@ import { useTranslation } from "react-i18next";
 import PopupGeometryModal from "./PopupGeometryModal";
 import LanguageSwitcher from "./LanguageSwitcher";
 
+// MUI
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Slider,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Divider,
+  Stack,
+  Tooltip,
+} from "@mui/material";
+
 function Sidebar({
   tileSettings,
   onTileSettingsChange,
@@ -59,10 +75,8 @@ function Sidebar({
   const txtChangeGeometry = isClient ? t("change_geometry") : "Изменить геометрию…";
   const txtCurrentDimensions = isClient ? t("current_dimensions") : "Текущие размеры";
   const txtGroutMm = isClient ? t("grout_mm") : "Шов (мм)";
-  const txtRowOffset = isClient ? t("row_offset_mm") : "Сдвиг ряда (мм)";
   const txtHerringbone = isClient ? t("herringbone") : "Укладка ёлочкой";
 
-  // новые ключи для остальных текстов
   const txtColors = isClient ? t("colors") : "Цвета";
   const txtTileColor = isClient ? t("tile_color") : "Цвет плитки";
   const txtOpacity = isClient ? t("opacity") : "Прозрачность";
@@ -75,7 +89,7 @@ function Sidebar({
   const txtOffsetX = isClient ? t("offset_x") : "Смещение X (мм)";
   const txtOffsetY = isClient ? t("offset_y") : "Смещение Y (мм)";
   const txtRotationDeg = isClient ? t("rotation_deg") : "Поворот (°)";
-  const txtOffsetHint = isClient ? t("offset_hint") : "Положительное X — вправо, положительное Y — вниз.";
+  const txtRowOffset = isClient ? t("row_offset_mm") : "Step";
 
   const txtZoom = isClient ? t("zoom") : "Масштаб (Zoom)";
   const txtCenter = isClient ? t("center") : "Центрировать";
@@ -88,7 +102,7 @@ function Sidebar({
   const txtNotCalibrated = isClient ? t("not_calibrated") : "не откалиброван";
 
   return (
-    <>
+    <Box display="flex" flexDirection="column" gap={2}>
       {/* Geometry popup */}
       <PopupGeometryModal
         open={isGeoModalOpen}
@@ -97,6 +111,7 @@ function Sidebar({
           tileWidthMm: localSettings.tileWidthMm,
           tileLengthMm: localSettings.tileLengthMm,
           groutMm: localSettings.groutMm,
+          rowOffsetMm: localSettings.rowOffsetMm,
         }}
         onSave={(newValues) => {
           // Batch update for performance
@@ -106,176 +121,220 @@ function Sidebar({
           }));
         }}
       />
-      <LanguageSwitcher />
-      {/* ============================= */}
-      {/*      TILE GEOMETRY (POPUP)    */}
-      {/* ============================= */}
-      <section>
-        <h3>{txtTileGeometry}</h3>
 
-        <button onClick={() => setGeoModalOpen(true)}>{txtChangeGeometry}</button>
-
-        <div style={{ marginTop: 6, fontSize: 12, color: "#666" }}>
-          {txtCurrentDimensions}: {localSettings.tileWidthMm} × {localSettings.tileLengthMm} мм, {txtGroutMm} {localSettings.groutMm}
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
-          <label>
-            {txtRowOffset}:{" "}
-            <input
-              type="number"
-              value={localSettings.rowOffsetMm ?? ""}
-              onChange={(e) => update("rowOffsetMm", e.target.value === "" ? 0 : Number(e.target.value))}
-            />
-          </label>
-
-          <label style={{ marginTop: 8 }}>
-            <input
-              type="checkbox"
+      {/* Language + Zoom go first */}
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <LanguageSwitcher />
+        <FormControlLabel
+          sx={{ mt: 0.5 }}
+          control={
+            <Checkbox
               checked={localSettings.pattern === "herringbone"}
               onChange={(e) => update("pattern", e.target.checked ? "herringbone" : "grid")}
-            />{" "}
-            {txtHerringbone} (herringbone)
-          </label>
-        </div>
-      </section>
+            />
+          }
+          label={`${txtHerringbone} (herringbone)`}
+        />
+      </Box>
 
-      {/* ============================= */}
-      {/*            COLORS             */}
-      {/* ============================= */}
-      <section>
-        <h3>{txtColors}</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label>
-            {txtTileColor}:{" "}
-            <input type="color" value={localSettings.tileFillColor} onChange={(e) => update("tileFillColor", e.target.value)} />
-          </label>
+      {/* ZOOM SECTION (moved up) */}
+      <Card variant="outlined">
+        <CardContent>
+          <Typography variant="subtitle1" gutterBottom>
+            {txtZoom}
+          </Typography>
 
-          <label>
-            {txtOpacity}:{" "}
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={localSettings.tileOpacity ?? 1}
-              onChange={(e) => update("tileOpacity", Number(e.target.value))}
-            />{" "}
-            {Math.round((localSettings.tileOpacity ?? 1) * 100)}%
-          </label>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Slider min={0.25} max={10} step={0.05} value={zoom} onChange={(_, value) => onZoomChange(Number(value))} size="small" />
+            <Typography variant="body2" sx={{ minWidth: 50, textAlign: "right" }}>
+              {Math.round(zoom * 100)}%
+            </Typography>
+            <Button variant="outlined" size="small" onClick={onCenterView}>
+              {txtCenter}
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
 
-          <label>
-            {txtBorderColor}:{" "}
-            <input type="color" value={localSettings.tileBorderColor} onChange={(e) => update("tileBorderColor", e.target.value)} />
-          </label>
+      {/* TILE GEOMETRY */}
+      <Card variant="outlined">
+        <CardContent>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+            <Typography variant="subtitle1">{txtTileGeometry}</Typography>
+            <Button variant="contained" size="small" onClick={() => setGeoModalOpen(true)}>
+              {txtChangeGeometry}
+            </Button>
+          </Box>
 
-          <label>
-            {txtGroutColor}: <input type="color" value={localSettings.groutColor} onChange={(e) => update("groutColor", e.target.value)} />
-          </label>
+          <Typography variant="caption" color="text.secondary">
+            {txtCurrentDimensions}: {localSettings.tileWidthMm} × {localSettings.tileLengthMm} мм, {txtGroutMm} {localSettings.groutMm},{" "}
+            {txtRowOffset} {localSettings.rowOffsetMm}
+          </Typography>
+        </CardContent>
+      </Card>
 
-          {(() => {
-            const groutValue = localSettings.groutMm ?? 0;
-            const canToggleBorder = groutValue <= 0;
-            const effectiveShowTileBorder = canToggleBorder ? localSettings.showTileBorder : false;
+      {/* COLORS */}
+      <Card variant="outlined">
+        <CardContent>
+          <Typography variant="subtitle1" gutterBottom>
+            {txtColors}
+          </Typography>
 
-            return (
-              <label style={{ marginTop: 8, opacity: canToggleBorder ? 1 : 0.5 }}>
+          <Box display="flex" flexDirection="column" gap={1.5}>
+            <Box display="flex" flexDirection="row" justifyContent="space-between">
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography variant="body2">{txtTileColor}</Typography>
                 <input
-                  type="checkbox"
-                  checked={effectiveShowTileBorder}
-                  disabled={!canToggleBorder}
-                  onChange={(e) => {
-                    if (!canToggleBorder) return;
-                    update("showTileBorder", e.target.checked);
-                  }}
-                />{" "}
-                {txtShowBorder}
-                {!canToggleBorder && <span style={{ marginLeft: 4, fontSize: 11, color: "#888" }}>{txtOnlyZero}</span>}
-              </label>
-            );
-          })()}
-        </div>
-      </section>
+                  type="color"
+                  value={localSettings.tileFillColor}
+                  onChange={(e) => update("tileFillColor", e.target.value)}
+                  style={{ border: "none", background: "transparent", width: 36, height: 24, padding: 0 }}
+                />
+              </Box>
 
-      {/* ============================= */}
-      {/*         OFFSET & ROTATION     */}
-      {/* ============================= */}
-      <section>
-        <h3>{txtOffsetAndRotation}</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label>
-            {txtOffsetX}:{" "}
-            <input
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography variant="body2">{txtBorderColor}</Typography>
+                <input
+                  type="color"
+                  value={localSettings.tileBorderColor}
+                  onChange={(e) => update("tileBorderColor", e.target.value)}
+                  style={{ border: "none", background: "transparent", width: 36, height: 24, padding: 0 }}
+                />
+              </Box>
+
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography variant="body2">{txtGroutColor}</Typography>
+                <input
+                  type="color"
+                  value={localSettings.groutColor}
+                  onChange={(e) => update("groutColor", e.target.value)}
+                  style={{ border: "none", background: "transparent", width: 36, height: 24, padding: 0 }}
+                />
+              </Box>
+            </Box>
+            <Box>
+              <Typography variant="body2" gutterBottom>
+                {txtOpacity}: {Math.round((localSettings.tileOpacity ?? 1) * 100)}%
+              </Typography>
+              <Slider
+                min={0}
+                max={1}
+                step={0.05}
+                size="small"
+                value={localSettings.tileOpacity ?? 1}
+                onChange={(_, value) => update("tileOpacity", Number(value))}
+              />
+            </Box>
+            {(() => {
+              const groutValue = localSettings.groutMm ?? 0;
+              const canToggleBorder = groutValue <= 0;
+              const effectiveShowTileBorder = canToggleBorder ? localSettings.showTileBorder : false;
+
+              return (
+                <FormControlLabel
+                  sx={{ opacity: canToggleBorder ? 1 : 0.5 }}
+                  control={
+                    <Checkbox
+                      checked={effectiveShowTileBorder}
+                      disabled={!canToggleBorder}
+                      onChange={(e) => {
+                        if (!canToggleBorder) return;
+                        update("showTileBorder", e.target.checked);
+                      }}
+                    />
+                  }
+                  label={
+                    <Box component="span">
+                      {txtShowBorder}
+                      {!canToggleBorder && (
+                        <Tooltip title={txtOnlyZero} placement="right">
+                          <Typography
+                            component="span"
+                            variant="caption"
+                            sx={{ ml: 0.5, textDecoration: "underline dotted", cursor: "help" }}
+                            color="text.secondary"
+                          >
+                            ?
+                          </Typography>
+                        </Tooltip>
+                      )}
+                    </Box>
+                  }
+                />
+              );
+            })()}
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* OFFSET & ROTATION */}
+      <Card variant="outlined">
+        <CardContent>
+          <Typography variant="subtitle1" gutterBottom>
+            {txtOffsetAndRotation}
+          </Typography>
+
+          <Box display="flex" flexDirection="row" gap={1.5}>
+            <TextField
+              label={txtOffsetX}
               type="number"
+              size="small"
               value={localSettings.patternOffsetMmX ?? 0}
               onChange={(e) => update("patternOffsetMmX", e.target.value === "" ? 0 : Number(e.target.value))}
             />
-          </label>
 
-          <label>
-            {txtOffsetY}:{" "}
-            <input
+            <TextField
+              label={txtOffsetY}
               type="number"
+              size="small"
               value={localSettings.patternOffsetMmY ?? 0}
               onChange={(e) => update("patternOffsetMmY", e.target.value === "" ? 0 : Number(e.target.value))}
             />
-          </label>
 
-          <label>
-            {txtRotationDeg}:{" "}
-            <input type="number" value={localSettings.rotationDeg} onChange={(e) => update("rotationDeg", Number(e.target.value) || 0)} />
-          </label>
+            <TextField
+              label={txtRotationDeg}
+              type="number"
+              size="small"
+              value={localSettings.rotationDeg}
+              onChange={(e) => update("rotationDeg", Number(e.target.value) || 0)}
+            />
 
-          <small style={{ color: "#666" }}>{txtOffsetHint}</small>
-        </div>
-      </section>
+            {/* <Typography variant="caption" color="text.secondary">
+              {txtOffsetHint}
+            </Typography> */}
+          </Box>
+        </CardContent>
+      </Card>
 
-      {/* ============================= */}
-      {/*             ZOOM              */}
-      {/* ============================= */}
-      <section>
-        <h3>{txtZoom}</h3>
+      {/* CALIBRATION */}
+      <Card variant="outlined">
+        <CardContent>
+          <Typography variant="subtitle1" gutterBottom>
+            {txtCalibration}
+          </Typography>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <input type="range" min={0.25} max={10} step={0.05} value={zoom} onChange={(e) => onZoomChange(Number(e.target.value))} />
+          <Box display="flex" flexDirection="column" gap={1.5}>
+            <TextField
+              label={txtKnownDistance}
+              type="number"
+              size="small"
+              value={calibration.knownDistanceMm}
+              onChange={(e) => onChangeKnownDistance(Number(e.target.value) || 0)}
+            />
 
-          <span>{Math.round(zoom * 100)}%</span>
+            <Button variant="contained" size="small" onClick={onStartCalibration}>
+              {calibration.isCalibrating ? txtClickTwoPoints : txtStartCalibration}
+            </Button>
 
-          <button
-            onClick={onCenterView}
-            style={{
-              padding: "4px 8px",
-              fontSize: 12,
-              cursor: "pointer",
-              border: "1px solid #ccc",
-              borderRadius: 4,
-              background: "#f2f2f2",
-            }}
-          >
-            {txtCenter}
-          </button>
-        </div>
-      </section>
+            <Divider sx={{ my: 1 }} />
 
-      {/* ============================= */}
-      {/*         CALIBRATION          */}
-      {/* ============================= */}
-      <section>
-        <h3>{txtCalibration}</h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label>
-            {txtKnownDistance}:{" "}
-            <input type="number" value={calibration.knownDistanceMm} onChange={(e) => onChangeKnownDistance(Number(e.target.value) || 0)} />
-          </label>
-
-          <button onClick={onStartCalibration}>{calibration.isCalibrating ? txtClickTwoPoints : txtStartCalibration}</button>
-
-          <div style={{ marginTop: 4, fontSize: 12 }}>
-            {txtCurrentScale}: {pxPerMm ? `${pxPerMm.toFixed(3)} px / мм` : txtNotCalibrated}
-          </div>
-        </div>
-      </section>
-    </>
+            <Typography variant="caption" color="text.secondary">
+              {txtCurrentScale}: {pxPerMm ? `${pxPerMm.toFixed(3)} px / мм` : txtNotCalibrated}
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
+    </Box>
   );
 }
 
