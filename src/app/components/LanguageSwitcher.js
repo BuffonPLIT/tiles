@@ -2,8 +2,9 @@
 
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { LANG_STORAGE_KEY } from "../../../i18n";
 
-const FLAG_SRC = "/flags/pl-by.png";
+const FLAG_SRC = "/flags/pl-by.png"; // 74×40
 
 function LanguageSwitcher() {
   const { i18n } = useTranslation();
@@ -12,20 +13,25 @@ function LanguageSwitcher() {
 
   const handleChange = (lng) => {
     if (lng === currentLng) return;
+
     i18n.changeLanguage(lng);
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(LANG_STORAGE_KEY, lng);
+    }
   };
 
   return (
     <div
       style={{
         display: "inline-flex",
+        border: "1px solid #ccc",
         borderRadius: 4,
         overflow: "hidden",
         marginBottom: 12,
         userSelect: "none",
       }}
     >
-      {/* Left half (PL) */}
       <button
         type="button"
         aria-label="Polski"
@@ -38,13 +44,7 @@ function LanguageSwitcher() {
           opacity: currentLng === "pl" ? 1 : 0.35,
         }}
       >
-        <div
-          style={{
-            width: 37,
-            height: 40,
-            overflow: "hidden",
-          }}
-        >
+        <div style={{ width: 37, height: 40, overflow: "hidden" }}>
           <img
             src={FLAG_SRC}
             alt="PL / BY"
@@ -52,14 +52,13 @@ function LanguageSwitcher() {
               width: 74,
               height: 40,
               objectFit: "cover",
-              transform: "translateX(0)", // левая половина
+              transform: "translateX(0)",
               display: "block",
             }}
           />
         </div>
       </button>
 
-      {/* Right half (BY) */}
       <button
         type="button"
         aria-label="Беларуская"
@@ -72,13 +71,7 @@ function LanguageSwitcher() {
           opacity: currentLng === "by" ? 1 : 0.35,
         }}
       >
-        <div
-          style={{
-            width: 37,
-            height: 40,
-            overflow: "hidden",
-          }}
-        >
+        <div style={{ width: 37, height: 40, overflow: "hidden" }}>
           <img
             src={FLAG_SRC}
             alt="PL / BY"
@@ -86,7 +79,7 @@ function LanguageSwitcher() {
               width: 74,
               height: 40,
               objectFit: "cover",
-              transform: "translateX(-37px)", // правая половина
+              transform: "translateX(-37px)",
               display: "block",
             }}
           />

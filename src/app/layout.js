@@ -2,6 +2,7 @@
 
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import LanguageBootstrap from "./LanguageBootstrap";
 
 // --- IMPORTANT: initialize i18n ---
 import "../../i18n";
@@ -19,7 +20,10 @@ const geistMono = Geist_Mono({
 export default function RootLayout({ children }) {
   return (
     <html lang="pl">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>{children}</body>
+      <body>
+        <LanguageBootstrap />
+        {children}
+      </body>
     </html>
   );
 }
