@@ -20,8 +20,6 @@ function PlanSvg({
   onMouseLeave,
   onClick,
 }) {
-  // Сетка пересчитывается ТОЛЬКО при изменении геометрии и настроек,
-  // но НЕ при zoom / offset
   const tilesOverlay = useMemo(() => {
     if (!imageSrc || !imageSize) return null;
 

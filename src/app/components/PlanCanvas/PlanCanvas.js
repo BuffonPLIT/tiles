@@ -3,6 +3,7 @@
 import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PlanSvg from "./PlanSvg";
+import { Button, Stack } from "@mui/material";
 
 export default function PlanCanvas({
   imageSrc,
@@ -257,10 +258,14 @@ export default function PlanCanvas({
             onClick={handleCanvasClick}
           />
 
-          <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-            <button onClick={handleExportPng}>{isClient ? t("export_png") : "Экспорт PNG"}</button>
-            <button onClick={handleExportPdf}>{isClient ? t("export_pdf") : "Экспорт PDF (через печать)"}</button>
-          </div>
+          <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+            <Button variant="outlined" size="small" onClick={handleExportPng}>
+              {isClient ? t("export_png") : "Экспорт PNG"}
+            </Button>
+            <Button variant="outlined" size="small" onClick={handleExportPdf}>
+              {isClient ? t("export_pdf") : "Экспорт PDF (через печать)"}
+            </Button>
+          </Stack>
         </>
       )}
     </>
