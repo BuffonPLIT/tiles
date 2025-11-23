@@ -36,5 +36,7 @@
   "upload_plan": "Załaduj plan mieszkania, aby rozpocząć pracę.",
   "export_png": "Eksport PNG",
   "export_pdf": "Eksport PDF (przez druk)",
-  "file_upload": "Wgraj plik planu"
+  "file_upload": "Wgraj plik planu",
+  "show_phone": "Pokaż kontakt",
+  "copy": "Kopiuj"
 }

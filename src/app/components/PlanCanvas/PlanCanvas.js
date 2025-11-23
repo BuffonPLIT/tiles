@@ -3,7 +3,8 @@
 import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import PlanSvg from "./PlanSvg";
-import { Button, Stack } from "@mui/material";
+import { Box, Button, Stack } from "@mui/material";
+import DonatePhone from "../DonatePhone";
 
 export default function PlanCanvas({
   imageSrc,
@@ -265,6 +266,9 @@ export default function PlanCanvas({
             <Button variant="outlined" size="small" onClick={handleExportPdf}>
               {isClient ? t("export_pdf") : "Экспорт PDF (через печать)"}
             </Button>
+      
+              <DonatePhone></DonatePhone>
+         
           </Stack>
         </>
       )}
