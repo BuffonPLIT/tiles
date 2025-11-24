@@ -58,22 +58,9 @@ export function renderHerringboneLines({
   for (let x = -margin; x <= imageSize.width + margin; x += lineSpacingX) {
     const xPos = x + offsetX;
 
-    // // Guiding yellow line
-    // lines.push(
-    //   <line
-    //     key={`hb-line-${lineIndex}`}
-    //     x1={xPos}
-    //     y1={-margin + offsetY}
-    //     x2={xPos}
-    //     y2={imageSize.height + margin + offsetY}
-    //     stroke={groutStrokeColor}
-    //     strokeWidth={groutStrokeWidth}
-    //     opacity={0.2}
-    //   />
-    // );
-
     // Extra red line in the middle between yellow ones (parallel)
     const secondaryX = xPos + lineSpacingX / 2 - lengthPx / (2 * Math.SQRT2);
+
     lines.push(
       <line
         key={`hb-line-red-${lineIndex}`}
@@ -86,6 +73,29 @@ export function renderHerringboneLines({
         opacity={0.8}
       />
     );
+
+    // ----------------------------------------------------
+    // Distance label — show only every 2nd red line
+    // ----------------------------------------------------
+    if (lineIndex % 2 === 0) {
+      const nextCenter = secondaryX + lineSpacingX;
+      const distPx = lineSpacingX;
+      const distMm = distPx / pxPerMm;
+
+      lines.push(
+        <text
+          key={`hb-dist-${lineIndex}`}
+          x={secondaryX + lineSpacingX / 2}
+          y={40}
+          fontSize={22}
+          fill="#ff0000"
+          textAnchor="middle"
+          style={{ userSelect: "none" }}
+        >
+          {distMm.toFixed(1)} mm
+        </text>
+      );
+    }
 
     const isOddLine = lineIndex % 2 === 1;
     const tileAngle = isOddLine ? 45 : 135;
